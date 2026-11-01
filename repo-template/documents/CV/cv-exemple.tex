@@ -1,0 +1,99 @@
+% CV d'exemple — compilé avec Tectonic (moteur XeTeX).
+% Remplacez le contenu, gardez la structure : \section, \entry, \skills.
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[a4paper, top=16mm, bottom=16mm, left=18mm, right=18mm]{geometry}
+\usepackage{fontspec}
+\setmainfont{texgyreheros}[
+  Extension = .otf,
+  UprightFont = *-regular,
+  BoldFont = *-bold,
+  ItalicFont = *-italic,
+  BoldItalicFont = *-bolditalic,
+]
+\usepackage[french]{babel}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage[hidelinks]{hyperref}
+
+% --- Couleurs sobres -------------------------------------------------------
+\definecolor{ink}{HTML}{141413}
+\definecolor{muted}{HTML}{6F6E68}
+\definecolor{accent}{HTML}{1C5CAB}
+\definecolor{rule}{HTML}{D5D4CD}
+\color{ink}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\linespread{1.08}
+
+% --- Titres de section : petites capitales espacées + filet -----------------
+\newcommand{\sectiontitle}[1]{{\addfontfeatures{LetterSpace=8}\MakeUppercase{#1}}}
+\newcommand{\sectionrule}{{\color{rule}\hrule height 0.6pt}}
+\titleformat{\section}
+  {\color{accent}\normalsize\bfseries}
+  {}{0pt}{\sectiontitle}[\vspace{3pt}\sectionrule]
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+
+\setlist[itemize]{leftmargin=1.1em, label={\color{muted}\textbullet}, itemsep=1pt, topsep=3pt, parsep=0pt}
+
+% \entry{Poste}{Dates}{Entreprise}{Lieu}
+\newcommand{\entry}[4]{%
+  \par\noindent\textbf{#1}\hfill{\color{muted}\small #2}\\
+  {\color{muted}#3\ifx&#4&\else\ · #4\fi}\par\vspace{2pt}}
+
+% \skills{Catégorie}{Liste}
+\newcommand{\skills}[2]{%
+  \noindent\begin{tabularx}{\linewidth}{@{}p{32mm}X@{}}\textbf{#1} & #2\end{tabularx}\par\vspace{2pt}}
+
+\begin{document}
+
+% --- En-tête -----------------------------------------------------------------
+{\fontsize{24}{28}\selectfont\bfseries Prénom Nom}\par
+\vspace{3pt}
+{\large\color{accent} Intitulé du poste visé}\par
+\vspace{6pt}
+{\small\color{muted}
+  Paris, France \quad·\quad
+  \href{mailto:prenom.nom@email.fr}{prenom.nom@email.fr} \quad·\quad
+  06 12 34 56 78 \quad·\quad
+  \href{https://www.linkedin.com/in/prenom-nom}{linkedin.com/in/prenom-nom}\par}
+
+\vspace{8pt}
+{\small Deux ou trois lignes de présentation : votre expertise, ce que vous apportez,
+le type de poste et d'environnement recherchés. Restez concret et orienté résultats.\par}
+
+\section{Expérience}
+
+\entry{Intitulé du poste}{Jan. 2022 — Aujourd'hui}{Entreprise}{Ville}
+\begin{itemize}
+  \item Réalisation marquante, chiffrée si possible (ex. réduction de 30\,\% des délais).
+  \item Projet piloté : périmètre, équipe, budget, résultat obtenu.
+  \item Compétence mise en œuvre et impact pour le client ou l'équipe.
+\end{itemize}
+\vspace{4pt}
+
+\entry{Intitulé du poste}{Sept. 2019 — Déc. 2021}{Entreprise}{Ville}
+\begin{itemize}
+  \item Réalisation marquante, chiffrée si possible.
+  \item Responsabilité clé et résultat.
+\end{itemize}
+
+\section{Formation}
+
+\entry{Diplôme — Spécialité}{2019}{École ou université}{Ville}
+
+\section{Compétences}
+
+\skills{Métier}{Compétence, compétence, compétence}
+\skills{Outils}{Outil, outil, outil}
+\skills{Langues}{Français (natif), anglais (courant)}
+
+\section{Centres d'intérêt}
+
+{\small Une ou deux lignes qui en disent un peu plus sur vous.\par}
+
+\end{document}

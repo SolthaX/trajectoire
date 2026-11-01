@@ -1,0 +1,8 @@
+/node_modules/
+/dist/
+/data/
+/documents/
+.env
+.envrc
+*.log
+.DS_Store

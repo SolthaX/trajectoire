@@ -1,0 +1,158 @@
+/* Module Documents : feuille A4, contenu des lettres, aperçus. */
+
+.lettre-desk {
+  background: var(--surface-2);
+}
+.dark .lettre-desk {
+  background: #0c0c0b;
+}
+
+.lettre-sheet-wrap {
+  width: max-content;
+  margin: 0 auto;
+  padding: 32px 32px 72px;
+}
+
+/* La feuille reste blanche, y compris en thème sombre. */
+.lettre-sheet {
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 24mm 22mm;
+  background: #fff;
+  color: #141413;
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px rgb(20 20 19 / 0.06),
+    0 1px 3px rgb(20 20 19 / 0.06),
+    0 18px 48px -18px rgb(20 20 19 / 0.25);
+  cursor: text;
+}
+.dark .lettre-sheet {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.04),
+    0 24px 60px -20px rgb(0 0 0 / 0.9);
+}
+
+/* Typographie identique à l'export (letterDocument) */
+.lettre-content {
+  font-family: Calibri, Carlito, 'Segoe UI', Arial, sans-serif;
+  font-size: 11pt;
+  line-height: 1.45;
+  color: #141413;
+  outline: none;
+  min-height: 100%;
+  font-feature-settings: normal;
+}
+.lettre-content ::selection {
+  background: rgb(42 120 214 / 0.22);
+}
+.lettre-content p {
+  margin: 0 0 0.85em;
+}
+.lettre-content h1 {
+  font-size: 16pt;
+  font-weight: 700;
+  margin: 0 0 0.6em;
+  line-height: 1.25;
+}
+.lettre-content h2 {
+  font-size: 13pt;
+  font-weight: 700;
+  margin: 1em 0 0.5em;
+  line-height: 1.3;
+}
+.lettre-content h3 {
+  font-size: 11.5pt;
+  font-weight: 700;
+  margin: 1em 0 0.4em;
+}
+.lettre-content strong,
+.lettre-content b {
+  font-weight: 700;
+}
+.lettre-content em,
+.lettre-content i {
+  font-style: italic;
+}
+.lettre-content u {
+  text-decoration: underline;
+}
+.lettre-content a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.lettre-content ul,
+.lettre-content ol {
+  margin: 0 0 0.85em;
+  padding-left: 1.4em;
+}
+.lettre-content ul {
+  list-style: disc;
+}
+.lettre-content ol {
+  list-style: decimal;
+}
+.lettre-content li p {
+  margin: 0 0 0.25em;
+}
+.lettre-content blockquote {
+  margin: 0 0 0.85em;
+  padding-left: 1em;
+  border-left: 2px solid #d5d4cd;
+  color: #52514e;
+}
+.lettre-content hr {
+  border: 0;
+  border-top: 1px solid #d5d4cd;
+  margin: 1em 0;
+}
+.lettre-content table {
+  border-collapse: collapse;
+  margin: 0 0 0.85em;
+}
+.lettre-content td,
+.lettre-content th {
+  border: 1px solid #d5d4cd;
+  padding: 4px 6px;
+}
+.lettre-content img {
+  max-width: 100%;
+}
+
+/* Placeholder TipTap */
+.lettre-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #a3a29b;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* {{variables}} des modèles */
+.lettre-var {
+  background: #eaf1fb;
+  color: #1c5cab;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgb(42 120 214 / 0.18);
+}
+
+/* Fond en damier discret pour les images */
+.doc-checker {
+  background-color: var(--surface-2);
+  background-image:
+    linear-gradient(45deg, var(--surface-3) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--surface-3) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--surface-3) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--surface-3) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+
+/* CodeMirror : occupe toute la hauteur disponible */
+.cm-theme,
+.cm-theme-light,
+.cm-theme-dark {
+  height: 100%;
+}

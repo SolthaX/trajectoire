@@ -1,0 +1,146 @@
+# Compile les CV LaTeX du dossier documents/ et publie les PDF dans le dépôt.
+# Déclenché par l'app Trajectoire (bouton « Compiler ») ou à la main (onglet Actions).
+name: Compilation LaTeX
+
+on:
+  push:
+    paths:
+      - 'documents/**.tex'
+  workflow_dispatch:
+    inputs:
+      fichier:
+        description: 'Fichier .tex à compiler (ex. documents/CV/cv.tex). Vide = tous.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+# Une compilation à la fois par branche ; les suivantes attendent leur tour.
+concurrency:
+  group: latex-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TECTONIC_VERSION: '0.17.0'
+
+jobs:
+  compiler:
+    name: Compiler les documents LaTeX
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache Tectonic (binaire et paquets LaTeX)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/Tectonic
+            ~/.local/bin/tectonic
+          key: tectonic-${{ env.TECTONIC_VERSION }}-${{ runner.os }}-${{ hashFiles('documents/**/*.tex') }}
+          restore-keys: |
+            tectonic-${{ env.TECTONIC_VERSION }}-${{ runner.os }}-
+
+      - name: Installer Tectonic
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.local/bin"
+          if [ ! -x "$HOME/.local/bin/tectonic" ]; then
+            url="https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${TECTONIC_VERSION}/tectonic-${TECTONIC_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+            curl -fsSL --retry 3 "$url" | tar -xz -C "$HOME/.local/bin" tectonic
+          fi
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/tectonic" --version
+
+      - name: Lister les fichiers à compiler
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          FICHIER: ${{ github.event.inputs.fichier }}
+        run: |
+          set -euo pipefail
+          liste="$RUNNER_TEMP/liste.txt"
+          tous() { git ls-files -- 'documents/*.tex' | grep -v '/\.' || true; }
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            if [ -n "$FICHIER" ]; then printf '%s\n' "$FICHIER" > "$liste"; else tous > "$liste"; fi
+          elif [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            # Premier push (ou historique réécrit) : on compile tout.
+            tous > "$liste"
+          else
+            git diff --name-only --diff-filter=AMR "$BEFORE" "$GITHUB_SHA" -- 'documents/*.tex' | grep -v '/\.' > "$liste" || true
+          fi
+          echo "Fichiers à compiler :"
+          cat "$liste" || true
+
+      - name: Compiler
+        id: compile
+        run: |
+          set -uo pipefail
+          status=0
+          : > "$RUNNER_TEMP/compiles.txt"
+          while IFS= read -r f; do
+            [ -n "$f" ] && [ -f "$f" ] || continue
+            if ! grep -q '\\documentclass' "$f"; then
+              echo "Ignoré (pas de \\documentclass, fichier inclus ?) : $f"
+              continue
+            fi
+            rel="${f#documents/}"
+            log=".latex/${rel%.tex}.log"
+            mkdir -p "$(dirname "$log")"
+            debut=$(date +%s)
+            if sortie=$(cd "$(dirname "$f")" && timeout 600 tectonic --untrusted --chatter minimal --color never "$(basename "$f")" 2>&1); then
+              etat="réussie"
+            else
+              etat="échec"
+              status=1
+            fi
+            {
+              echo "# Compilation ${etat} — ${f} — $(date -u '+%Y-%m-%d %H:%M UTC') — $(( $(date +%s) - debut )) s"
+              printf '%s\n' "$sortie"
+            } > "$log"
+            echo "$f" >> "$RUNNER_TEMP/compiles.txt"
+            echo "::group::${f} (${etat})"
+            printf '%s\n' "$sortie"
+            echo "::endgroup::"
+          done < "$RUNNER_TEMP/liste.txt"
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
+
+      - name: Publier les PDF et les journaux
+        run: |
+          set -euo pipefail
+          compiles="$RUNNER_TEMP/compiles.txt"
+          [ -s "$compiles" ] || { echo "Aucun fichier compilé."; exit 0; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          [ -d .latex ] && git add -A -- .latex
+          while IFS= read -r f; do
+            pdf="${f%.tex}.pdf"
+            if [ -f "$pdf" ]; then git add -- "$pdf"; fi
+          done < "$compiles"
+          if git diff --cached --quiet; then
+            echo "Rien de nouveau à publier."
+            exit 0
+          fi
+          n=$(wc -l < "$compiles")
+          premier=$(basename "$(head -n 1 "$compiles")")
+          message="PDF compilé : ${premier}"
+          if [ "$n" -gt 1 ]; then message="${message} (+$((n - 1)))"; fi
+          git commit -m "$message"
+          for essai in 1 2 3 4 5; do
+            if git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              exit 0
+            fi
+            echo "Push refusé (la branche a bougé), nouvel essai…"
+            sleep $((essai * 3))
+          done
+          exit 1
+
+      - name: Résultat
+        if: steps.compile.outputs.status == '1'
+        run: |
+          echo "::error::Au moins une compilation a échoué. Le journal est dans .latex/ (et visible dans l'app)."
+          exit 1
