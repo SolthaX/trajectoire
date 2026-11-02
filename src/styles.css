@@ -31,14 +31,35 @@
   --warning-ink: #8a5a1c;
   --warning-soft: #f3e6d4;
 
+  /* Palette étendue (théorie des couleurs) :
+     - complémentaire du Midnight blue : Corail #E07A5F
+     - complémentaires divisées : Safran #E9B44C (chaud) et Prune #8E6C8A (froid)
+     - analogue du Light blue : Sauge #81B29A
+     Saturations et clartés alignées sur la palette de base pour rester harmonieuses. */
+  --coral: #e07a5f;
+  --saffron: #e9b44c;
+  --sage: #81b29a;
+  --plum: #8e6c8a;
+  --sky: #96c0ce;
+  --tan: #d8ba98;
+  --teal: #0f414a;
+  --maroon: #7f0303;
+  /* versions pâles (fonds de pastilles, tuiles) */
+  --coral-soft: #f8ddd4;
+  --saffron-soft: #f9ebcb;
+  --sage-soft: #dcebe2;
+  --plum-soft: #e9dfe7;
+  --sky-soft: #dceaf0;
+  --tan-soft: #f1e5d6;
+
   /* couleurs d'identité des statuts (pastilles) */
   --c-gray: #c9bfb2;
   --c-slate: #6b7a7c;
-  --c-amber: #d8ba98;
-  --c-orange: #b9733c;
-  --c-blue: #96c0ce;
-  --c-violet: #0f414a;
-  --c-green: #4f8a68;
+  --c-amber: #e9b44c;
+  --c-orange: #e07a5f;
+  --c-blue: #4f8fa6;
+  --c-violet: #8e6c8a;
+  --c-green: #5e9c7c;
   --c-red: #7f0303;
 
   /* graphiques */
@@ -75,14 +96,29 @@
   --warning-ink: #d8ba98;
   --warning-soft: #3a2e1e;
 
+  --coral: #ec9278;
+  --saffron: #efc46a;
+  --sage: #94c4ab;
+  --plum: #b493af;
+  --sky: #a9cfdb;
+  --tan: #e2c8a9;
+  --teal: #96c0ce;
+  --maroon: #e07a6e;
+  --coral-soft: #4a2a24;
+  --saffron-soft: #463818;
+  --sage-soft: #1f3d31;
+  --plum-soft: #3a2a3a;
+  --sky-soft: #1d4a57;
+  --tan-soft: #42352a;
+
   --c-gray: #5b6f72;
   --c-slate: #9aabad;
-  --c-amber: #d8ba98;
-  --c-orange: #c98a52;
+  --c-amber: #efc46a;
+  --c-orange: #ec9278;
   --c-blue: #96c0ce;
-  --c-violet: #7fa9b8;
-  --c-green: #5fae80;
-  --c-red: #c94a3f;
+  --c-violet: #b493af;
+  --c-green: #94c4ab;
+  --c-red: #e07a6e;
 
   --grid: #22626e;
   --axis: #96c0ce;
@@ -132,6 +168,20 @@
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
   --color-brand: var(--brand);
+  --color-coral: var(--coral);
+  --color-saffron: var(--saffron);
+  --color-sage: var(--sage);
+  --color-plum: var(--plum);
+  --color-sky: var(--sky);
+  --color-tan: var(--tan);
+  --color-teal: var(--teal);
+  --color-maroon: var(--maroon);
+  --color-coral-soft: var(--coral-soft);
+  --color-saffron-soft: var(--saffron-soft);
+  --color-sage-soft: var(--sage-soft);
+  --color-plum-soft: var(--plum-soft);
+  --color-sky-soft: var(--sky-soft);
+  --color-tan-soft: var(--tan-soft);
   --color-on-brand: var(--on-brand);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);

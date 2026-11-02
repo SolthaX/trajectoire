@@ -28,10 +28,19 @@ import { useContactSheet } from '../../lib/hooks';
 import { InteractionIcon } from '../interactions/InteractionIcon';
 import { BarList, Funnel, WeeklyColumns } from './charts';
 
-function StatTile({ label, value, sub, to }: { label: string; value: ReactNode; sub?: ReactNode; to: string }) {
+const TONES = {
+  sky: 'border-t-sky bg-sky-soft',
+  coral: 'border-t-coral bg-coral-soft',
+  saffron: 'border-t-saffron bg-saffron-soft',
+  plum: 'border-t-plum bg-plum-soft',
+  sage: 'border-t-sage bg-sage-soft',
+  tan: 'border-t-tan bg-tan-soft',
+} as const;
+
+function StatTile({ label, value, sub, to, tone = 'sky' }: { label: string; value: ReactNode; sub?: ReactNode; to: string; tone?: keyof typeof TONES }) {
   return (
-    <Link to={to} className="group rounded-xl border border-line bg-surface p-4 shadow-xs transition-colors hover:border-line-strong">
-      <div className="text-[12.5px] text-ink-3">{label}</div>
+    <Link to={to} className={clsx('group rounded-xl border border-t-4 border-line p-4 shadow-xs transition-colors hover:border-line-strong', TONES[tone])}>
+      <div className="text-[12.5px] font-medium text-ink-2">{label}</div>
       <div className="mt-1.5 text-[26px] leading-none font-semibold tracking-[-0.02em] text-ink">{value}</div>
       <div className="mt-2 h-4 text-[12px] text-ink-3">{sub}</div>
     </Link>
@@ -47,11 +56,12 @@ interface TodoItem {
   onClick: () => void;
 }
 
-function TodoGroup({ title, items, empty }: { title: string; items: TodoItem[]; empty?: string }) {
+function TodoGroup({ title, items, empty, dot = 'bg-sky' }: { title: string; items: TodoItem[]; empty?: string; dot?: string }) {
   if (!items.length && !empty) return null;
   return (
     <div>
       <div className="mb-1.5 flex items-center gap-2 text-[11.5px] font-medium tracking-wide text-ink-3 uppercase">
+        <span className={clsx('size-2 rounded-full', dot)} />
         {title}
         {items.length > 0 && <span className="tabular rounded-full bg-surface-3 px-1.5 text-[10.5px] leading-4 text-ink-2">{items.length}</span>}
       </div>
@@ -251,16 +261,17 @@ export function DashboardPage() {
       {isEmpty && <Onboarding hasProfile={!!firstName} />}
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-        <StatTile label="Entreprises suivies" value={kpis.companies} to="/entreprises" sub={<span className="inline-flex items-center gap-1"><Building2 className="size-3" /> hors écartées</span>} />
+        <StatTile tone="tan" label="Entreprises suivies" value={kpis.companies} to="/entreprises" sub={<span className="inline-flex items-center gap-1"><Building2 className="size-3" /> hors écartées</span>} />
         <StatTile
+          tone="coral"
           label="Contacts approchés"
           value={kpis.contacted}
           to="/contacts"
           sub={kpis.contacted ? `${fmtPercent(kpis.responded, kpis.contacted)} de réponses` : 'aucun pour l’instant'}
         />
-        <StatTile label="Candidatures envoyées" value={kpis.applications} to="/offres" sub={kpis.offers ? `${kpis.offers} offre${kpis.offers > 1 ? 's' : ''} reçue${kpis.offers > 1 ? 's' : ''}` : undefined} />
-        <StatTile label="Entretiens à venir" value={kpis.interviews_upcoming} to="/entretiens" />
-        <StatTile label="Relances en attente" value={data.followups.filter((f) => f.overdue_days >= 0).length} to="/contacts" sub="aujourd'hui ou en retard" />
+        <StatTile tone="sage" label="Candidatures envoyées" value={kpis.applications} to="/offres" sub={kpis.offers ? `${kpis.offers} offre${kpis.offers > 1 ? 's' : ''} reçue${kpis.offers > 1 ? 's' : ''}` : undefined} />
+        <StatTile tone="plum" label="Entretiens à venir" value={kpis.interviews_upcoming} to="/entretiens" />
+        <StatTile tone="saffron" label="Relances en attente" value={data.followups.filter((f) => f.overdue_days >= 0).length} to="/contacts" sub="aujourd'hui ou en retard" />
       </div>
 
       <div className="mb-6 grid gap-5 lg:grid-cols-12">
@@ -274,11 +285,11 @@ export function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-5">
-              <TodoGroup title="Messages et calls prévus" items={planned} />
-              <TodoGroup title="Relances" items={followups} />
-              <TodoGroup title="Entretiens" items={interviews} />
-              <TodoGroup title="Échéances" items={deadlines} />
-              <TodoGroup title="Priorités hautes" items={priorities} />
+              <TodoGroup title="Messages et calls prévus" items={planned} dot="bg-saffron" />
+              <TodoGroup title="Relances" items={followups} dot="bg-coral" />
+              <TodoGroup title="Entretiens" items={interviews} dot="bg-plum" />
+              <TodoGroup title="Échéances" items={deadlines} dot="bg-maroon" />
+              <TodoGroup title="Priorités hautes" items={priorities} dot="bg-sage" />
             </div>
           )}
         </Card>

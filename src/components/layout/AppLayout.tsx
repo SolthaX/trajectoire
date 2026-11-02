@@ -28,6 +28,7 @@ import { CommandPalette } from './CommandPalette';
 import { InstallButton, SyncIndicator } from './SyncIndicator';
 
 interface NavItem {
+  color?: string;
   to: string;
   label: string;
   icon: ReactNode;
@@ -54,7 +55,7 @@ function NavGroup({ title, items, onNavigate }: { title?: string; items: NavItem
         >
           {({ isActive }) => (
             <>
-              <span className={clsx('flex', isActive ? 'text-ink' : 'text-ink-3 group-hover:text-ink-2')}>{it.icon}</span>
+              <span className={clsx('flex', it.color ?? (isActive ? 'text-ink' : 'text-ink-3 group-hover:text-ink-2'))}>{it.icon}</span>
               <span className="flex-1 truncate">{it.label}</span>
               {!!it.badge && (
                 <span
@@ -100,27 +101,27 @@ function Sidebar({ onSearch, onNavigate }: { onSearch: () => void; onNavigate?: 
         <NavGroup
           onNavigate={onNavigate}
           items={[
-            { to: '/', label: "Vue d'ensemble", icon: <LayoutDashboard />, end: true },
-            { to: '/pipeline', label: 'Pipeline', icon: <Columns3 /> },
+            { to: '/', label: "Vue d'ensemble", icon: <LayoutDashboard />, end: true, color: 'text-sky' },
+            { to: '/pipeline', label: 'Pipeline', icon: <Columns3 />, color: 'text-saffron' },
           ]}
         />
         <NavGroup
           title="Prospection"
           onNavigate={onNavigate}
           items={[
-            { to: '/entreprises', label: 'Entreprises', icon: <Building2 /> },
-            { to: '/contacts', label: 'Contacts', icon: <Users />, badge: due },
-            { to: '/offres', label: 'Offres', icon: <Briefcase /> },
-            { to: '/a-envoyer', label: 'À envoyer', icon: <Send /> },
-            { to: '/entretiens', label: 'Entretiens', icon: <CalendarClock /> },
+            { to: '/entreprises', label: 'Entreprises', icon: <Building2 />, color: 'text-tan' },
+            { to: '/contacts', label: 'Contacts', icon: <Users />, badge: due, color: 'text-coral' },
+            { to: '/offres', label: 'Offres', icon: <Briefcase />, color: 'text-sage' },
+            { to: '/a-envoyer', label: 'À envoyer', icon: <Send />, color: 'text-saffron' },
+            { to: '/entretiens', label: 'Entretiens', icon: <CalendarClock />, color: 'text-plum' },
           ]}
         />
         <NavGroup
           title="Outils"
           onNavigate={onNavigate}
           items={[
-            { to: '/modeles', label: 'Modèles de mails', icon: <Mail /> },
-            { to: '/documents', label: 'Documents', icon: <FolderOpen /> },
+            { to: '/modeles', label: 'Modèles de mails', icon: <Mail />, color: 'text-sky' },
+            { to: '/documents', label: 'Documents', icon: <FolderOpen />, color: 'text-sage' },
           ]}
         />
       </nav>

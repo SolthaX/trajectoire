@@ -63,7 +63,7 @@ export function WeeklyColumns({ data }: { data: { week: string; count: number }[
           const showLabel = i % 2 === last % 2;
           return (
             <g key={d.week}>
-              {path && <path d={path} fill="var(--accent)" opacity={hover == null || hover === i ? 1 : 0.45} />}
+              {path && <path d={path} fill="var(--coral)" opacity={hover == null || hover === i ? 1 : 0.45} />}
               {i === last && d.count > 0 && (
                 <text x={x + barW / 2} y={yTop - 5} textAnchor="middle" className="tabular fill-[var(--ink)] text-[11px] font-semibold">
                   {d.count}
