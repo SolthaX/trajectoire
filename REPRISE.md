@@ -1,6 +1,6 @@
 # Reprise — Trajectoire (dashboard de recherche d'emploi)
 
-> Dernière mise à jour : 2026-11-02 09:28 · branche `main` · commit `fa48fb2` · en ligne : https://solthax.github.io/trajectoire/
+> Dernière mise à jour : 2026-11-02 11:05 · branche `main` · commit `f8821b9` · en ligne : https://solthax.github.io/trajectoire/
 > Fichier maintenu par `/end` (lu par `/start`). Aucune donnée sensible ici.
 
 ## Indicateurs
@@ -10,8 +10,8 @@
 | Objectifs du jalon en cours | 7/8 (88 %) : reste le premier test réel avec le jeton |
 | Tests | Pas de suite dans le dépôt ; 26 vérifications navigateur (Playwright, hors dépôt) passées : 13 version statique, 8 synchro 2 appareils, 5 documents |
 | Lint / typecheck | `npm run typecheck` OK · `npm run build` OK |
-| Commits (total / depuis la dernière reprise) | 1 / 1 |
-| Modifications non commitées | REPRISE.md |
+| Commits (total / depuis la dernière reprise) | 3 / 2 |
+| Modifications non commitées | aucune |
 
 ## État actuel
 
@@ -23,14 +23,10 @@ LaTeX par GitHub Actions (Tectonic). Tout a été testé contre un faux GitHub e
 
 ## Fait lors de la dernière session
 
-- V1 locale (serveur Node + lancer.bat), puis bascule vers une web app statique à la demande de l'utilisateur.
-- Backend embarqué : ids générés côté client, suppressions mémorisées, fusion déterministe « le plus récent l'emporte ».
-- Client GitHub (`src/lib/github.ts`) : commits atomiques via l'API Git Data, rejeu en cas de conflit.
-- Module Documents porté sur GitHub (agent) + workflow `repo-template/.github/workflows/latex.yml`.
-- Web app installable : manifeste, icônes, service worker généré au build, 404.html pour les liens profonds,
-  bouton « Installer l'app », indicateur de synchro, clés localStorage préfixées `trajectoire:` (origine
-  github.io partagée avec Benkyō).
-- Supprimés : serveur Node, lancer.bat / lancer.sh, script d'installation Tectonic local.
+- Correctif : l'icône Benkyō ouvrait Trajectoire (même id de manifeste `./` → racine du domaine).
+  Ids absolus `/trajectoire/` (contrôlé au build) et `/JapaneseStudy/`, vérifiés dans Chromium (`Page.getAppId`).
+- Benkyō ne supprime plus les caches ni le localStorage des autres apps de l'origine ; SW des deux apps en `cache: 'reload'`.
+- JapaneseStudy cloné dans `~/projets/JapaneseStudy` (commit `85a738b`, poussé).
 
 ## En cours
 
