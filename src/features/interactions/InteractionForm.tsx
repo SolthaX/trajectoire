@@ -150,7 +150,7 @@ export function InteractionForm({
               className={clsx(
                 'inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-[12.5px] font-medium transition-colors',
                 values.type === t.value
-                  ? 'border-ink bg-ink text-bg'
+                  ? 'border-brand bg-brand text-on-brand'
                   : 'border-line bg-surface text-ink-2 hover:border-line-strong hover:text-ink',
               )}
             >

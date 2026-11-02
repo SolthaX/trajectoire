@@ -172,7 +172,7 @@ export function AppLayout() {
 
   return (
     <div className="flex h-full">
-      <aside className="hidden w-[232px] shrink-0 border-r border-line bg-bg lg:block">
+      <aside className="hidden w-[232px] shrink-0 side border-r border-line bg-bg text-ink lg:block">
         <Sidebar onSearch={() => setPaletteOpen(true)} />
       </aside>
 
@@ -180,7 +180,7 @@ export function AppLayout() {
       {mobileNav && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={() => setMobileNav(false)} />
-          <aside className="anim-sheet absolute inset-y-0 left-0 w-[260px] border-r border-line bg-bg shadow-lg">
+          <aside className="anim-sheet absolute inset-y-0 left-0 w-[260px] side border-r border-line bg-bg text-ink shadow-lg">
             <Sidebar onSearch={() => setPaletteOpen(true)} onNavigate={() => setMobileNav(false)} />
           </aside>
         </div>

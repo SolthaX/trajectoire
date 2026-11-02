@@ -51,7 +51,7 @@ export function useTheme() {
     setDark((d) => {
       const next = !d;
       document.documentElement.classList.toggle('dark', next);
-      document.querySelector('meta[name=theme-color]')?.setAttribute('content', next ? '#08252a' : '#efe8df');
+      document.querySelector('meta[name=theme-color]')?.setAttribute('content', next ? '#0f414a' : '#0f414a');
       try {
         localStorage.setItem('trajectoire:theme', next ? 'dark' : 'light');
       } catch {

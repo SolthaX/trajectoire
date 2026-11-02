@@ -9,11 +9,11 @@
 :root {
   color-scheme: light;
   /* Palette : Alabaster #EFE8DF · Tan #D8BA98 · Light blue #96C0CE · Midnight blue #0F414A · Maroon #7F0303 */
-  --bg: #efe8df;
-  --surface: #faf7f2;
-  --surface-2: #f4eee6;
-  --surface-3: #e9dfd2;
-  --line: #e2d6c6;
+  --bg: #b9d4dd;
+  --surface: #f6f1ea;
+  --surface-2: #efe8df;
+  --surface-3: #e6dacb;
+  --line: #ddcbb4;
   --line-strong: #d8ba98;
   --ink: #0b2a30;
   --ink-2: #3f5458;
@@ -22,6 +22,8 @@
   --accent-ink: #0f414a;
   --accent-soft: #dce9ed;
   --on-accent: #ffffff;
+  --brand: #7f0303;
+  --on-brand: #efe8df;
   --danger: #7f0303;
   --danger-soft: #f5e1de;
   --success: #2f6e4f;
@@ -40,7 +42,7 @@
   --c-red: #7f0303;
 
   /* graphiques */
-  --grid: #e6dccf;
+  --grid: #e2d6c6;
   --axis: #d8ba98;
 
   --shadow-xs: 0 1px 1px rgb(15 65 74 / 0.03);
@@ -51,12 +53,12 @@
 
 .dark {
   color-scheme: dark;
-  --bg: #08252a;
-  --surface: #0d3037;
-  --surface-2: #123940;
-  --surface-3: #18444c;
-  --line: #1d4a52;
-  --line-strong: #2b5c64;
+  --bg: #0f414a;
+  --surface: #15515b;
+  --surface-2: #1b5c67;
+  --surface-3: #226773;
+  --line: #2a6c77;
+  --line-strong: #d8ba98;
   --ink: #efe8df;
   --ink-2: #c9c0b4;
   --ink-3: #8fa2a4;
@@ -64,6 +66,8 @@
   --accent-ink: #b4d4df;
   --accent-soft: #1a4d57;
   --on-accent: #08252a;
+  --brand: #a3211b;
+  --on-brand: #efe8df;
   --danger: #e07a6e;
   --danger-soft: #3d1414;
   --success: #6fbf8e;
@@ -80,13 +84,34 @@
   --c-green: #5fae80;
   --c-red: #c94a3f;
 
-  --grid: #16404a;
-  --axis: #2b5c64;
+  --grid: #22626e;
+  --axis: #96c0ce;
 
   --shadow-xs: 0 1px 1px rgb(0 0 0 / 0.2);
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
   --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 28px -10px rgb(0 0 0 / 0.6);
   --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.3), 0 28px 70px -18px rgb(0 0 0 / 0.8);
+}
+
+/* Barre latérale : bloc Midnight blue (clair) / Maroon profond (sombre), texte Alabaster. */
+.side {
+  --bg: #0f414a;
+  --surface: #17525c;
+  --surface-2: #1d5d68;
+  --line: #2a6c77;
+  --line-strong: #d8ba98;
+  --ink: #efe8df;
+  --ink-2: #e2d6c6;
+  --ink-3: #96c0ce;
+  --danger-soft: #7f0303;
+  --danger: #efe8df;
+}
+.dark .side {
+  --bg: #4a0b08;
+  --surface: #5e1712;
+  --surface-2: #6b1f19;
+  --line: #7a2a22;
+  --ink-3: #d8ba98;
 }
 
 @theme inline {
@@ -106,6 +131,8 @@
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
+  --color-brand: var(--brand);
+  --color-on-brand: var(--on-brand);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
