@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/button';
 import { Segmented } from '../../components/ui/form';
 import { Avatar, EmptyState, Loading, PageHeader } from '../../components/ui/misc';
 import { useList, useSave } from '../../lib/api';
-import { daysFromToday, ensureUrl, fmtAgo, fmtRelativeDay, fullName, plural } from '../../lib/format';
+import { daysFromToday, ensureUrl, fmtAgo, fmtRelativeDay, fullName, plural, splitList } from '../../lib/format';
 import { useContactSheet, useLocalState, useNewParam } from '../../lib/hooks';
 import { ContactForm } from './ContactForm';
 
@@ -68,12 +68,12 @@ export function ContactsPage() {
       cell: (c) => (
         <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
           {c.email ? (
-            <a href={`mailto:${c.email}`} title={c.email} className="rounded p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink">
+            <a href={`mailto:${splitList(c.email)[0]}`} title={splitList(c.email).join(', ')} className="rounded p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink">
               <Mail className="size-3.5" />
             </a>
           ) : null}
           {c.phone ? (
-            <a href={`tel:${c.phone.replace(/\s/g, '')}`} title={c.phone} className="rounded p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink">
+            <a href={`tel:${splitList(c.phone)[0].replace(/\s/g, '')}`} title={splitList(c.phone).join(', ')} className="rounded p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink">
               <Phone className="size-3.5" />
             </a>
           ) : null}

@@ -121,9 +121,9 @@ export const dashboardRoutes = new Hono().get('/', (c) => {
   });
   const weekly = weeks.map((w) => ({ week: w, count: 0 }));
   const events = all<{ d: string }>(
-    `SELECT substr(date, 1, 10) d FROM interactions WHERE date >= ?
+    `SELECT substr(date, 1, 10) d FROM interactions WHERE date >= ? AND direction != 'prevu'
      UNION ALL SELECT applied_at d FROM jobs WHERE applied_at IS NOT NULL AND applied_at >= ?
-       AND NOT EXISTS (SELECT 1 FROM interactions i WHERE i.job_id = jobs.id AND i.type = 'candidature')`,
+       AND NOT EXISTS (SELECT 1 FROM interactions i WHERE i.job_id = jobs.id AND i.type = 'candidature' AND i.direction != 'prevu')`,
     weeks[0],
     weeks[0],
   );
@@ -158,7 +158,8 @@ export const dashboardRoutes = new Hono().get('/', (c) => {
     .slice(0, 6)
     .map((co) => ({ id: co.id, name: co.name, score: co.best_score, projects: co.projects_count }));
 
-  const recent = interactions.list('WHERE 1 = 1').slice(0, 8);
+  const recent = interactions.list(`WHERE i.direction != 'prevu'`).slice(0, 8);
+  const planned = interactions.list(`WHERE i.direction = 'prevu'`).reverse();
 
   return c.json({
     kpis,
@@ -172,6 +173,7 @@ export const dashboardRoutes = new Hono().get('/', (c) => {
     contact_statuses,
     top_companies,
     recent,
+    planned,
   });
 });
 

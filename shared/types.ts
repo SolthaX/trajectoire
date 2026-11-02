@@ -128,6 +128,8 @@ export interface Interaction {
   date: string;
   subject: string;
   content: string;
+  /** Lien de visio (call prévu en visio). */
+  link: string;
   created_at: string;
   company_name?: string | null;
   contact_name?: string | null;
@@ -186,6 +188,7 @@ export interface DashboardData {
   contact_statuses: { status: string; count: number }[];
   top_companies: { id: number; name: string; score: number; projects: number }[];
   recent: Interaction[];
+  planned: Interaction[];
 }
 
 export interface SearchResult {

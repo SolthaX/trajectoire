@@ -19,6 +19,7 @@ const EMPTY = {
   date: '',
   subject: '',
   content: '',
+  link: '',
   contact_id: null as number | null,
   job_id: null as number | null,
   company_id: null as number | null,
@@ -42,7 +43,7 @@ export function InteractionForm({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   interaction?: Interaction | null;
-  defaults?: { contact_id?: number | null; company_id?: number | null; job_id?: number | null; type?: string };
+  defaults?: { contact_id?: number | null; company_id?: number | null; job_id?: number | null; type?: string; direction?: string };
 }) {
   const save = useSave('interactions');
   const remove = useRemove('interactions');
@@ -56,6 +57,8 @@ export function InteractionForm({
 
   const contact = contacts.find((c) => c.id === values.contact_id);
   const days = settings?.followup_days ?? 7;
+  const planned = values.direction === 'prevu';
+  const isCall = values.type === 'appel' || values.type === 'rdv';
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +70,7 @@ export function InteractionForm({
             date: interaction.date,
             subject: interaction.subject,
             content: interaction.content,
+            link: interaction.link ?? '',
             contact_id: interaction.contact_id,
             job_id: interaction.job_id,
             company_id: interaction.company_id,
@@ -75,13 +79,14 @@ export function InteractionForm({
             ...EMPTY,
             date: nowLocalISO(),
             type: defaults?.type ?? 'email',
+            direction: defaults?.direction ?? 'sortant',
             contact_id: defaults?.contact_id ?? null,
             job_id: defaults?.job_id ?? null,
             company_id: defaults?.company_id ?? null,
           },
     );
     setUpdateContact(true);
-  }, [open, interaction, defaults?.contact_id, defaults?.company_id, defaults?.job_id, defaults?.type, reset]);
+  }, [open, interaction, defaults?.contact_id, defaults?.company_id, defaults?.job_id, defaults?.type, defaults?.direction, reset]);
 
   // Suggestions de mise à jour du contact.
   useEffect(() => {
@@ -94,10 +99,10 @@ export function InteractionForm({
     if (!values.date) return;
     try {
       await save.mutateAsync({ id: interaction?.id, ...values });
-      if (contact && !interaction && updateContact) {
+      if (contact && !interaction && updateContact && !planned) {
         await api.patch(`/contacts/${contact.id}`, { status: nextStatus, next_followup: followup || null });
       }
-      toast.success(interaction ? 'Échange mis à jour' : 'Échange ajouté au journal');
+      toast.success(interaction ? 'Échange mis à jour' : planned ? 'Action planifiée' : 'Échange ajouté au journal');
       onOpenChange(false);
     } catch (e) {
       toast.error(errorMessage(e));
@@ -116,7 +121,7 @@ export function InteractionForm({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={interaction ? "Modifier l'échange" : 'Noter un échange'}
+      title={interaction ? "Modifier l'échange" : defaults?.direction === 'prevu' ? 'Planifier une action' : 'Noter un échange'}
       size="lg"
       onSubmit={submit}
       footer={
@@ -158,23 +163,31 @@ export function InteractionForm({
           <Field label="Sens">
             {() => (
               <Segmented
-                value={values.direction as 'sortant' | 'entrant'}
+                value={values.direction as 'sortant' | 'entrant' | 'prevu'}
                 onChange={(v) => set('direction', v)}
                 options={[
                   { value: 'sortant', label: 'De moi' },
                   { value: 'entrant', label: "De l'interlocuteur" },
+                  { value: 'prevu', label: 'À faire' },
                 ]}
               />
             )}
           </Field>
-          <Field label="Date">{(id) => <Input id={id} type="datetime-local" {...bind('date')} />}</Field>
+          <Field label={planned ? (isCall ? 'Date du call' : "Date d'envoi prévue") : 'Date'}>{(id) => <Input id={id} type="datetime-local" {...bind('date')} />}</Field>
           <Field label="Contact">{(id) => <ContactPicker id={id} value={values.contact_id} onChange={(v) => set('contact_id', v)} />}</Field>
           <Field label="Offre liée">{(id) => <JobPicker id={id} value={values.job_id} onChange={(v) => set('job_id', v)} />}</Field>
         </FormGrid>
-        <Field label="Objet">{(id) => <Input id={id} {...bind('subject')} placeholder="ex. Premier message, appel de qualification…" />}</Field>
-        <Field label="Contenu / notes">{(id) => <Textarea id={id} rows={5} {...bind('content')} />}</Field>
+        <Field label={isCall ? 'Thème du call' : 'Objet'}>
+          {(id) => <Input id={id} {...bind('subject')} placeholder={isCall ? 'ex. Présentation du poste, point réseau…' : 'ex. Premier message, relance…'} />}
+        </Field>
+        {isCall && (
+          <Field label="Lien de la visio" hint="Laisser vide si c'est un appel téléphonique.">
+            {(id) => <Input id={id} {...bind('link')} placeholder="https://meet.google.com/… ou https://teams.microsoft.com/…" />}
+          </Field>
+        )}
+        <Field label={planned && !isCall ? 'Message à envoyer' : 'Contenu / notes'}>{(id) => <Textarea id={id} rows={5} {...bind('content')} />}</Field>
 
-        {contact && !interaction && (
+        {contact && !interaction && !planned && (
           <div className="rounded-xl border border-line bg-surface-2/60 p-4">
             <label className="flex items-center gap-2 text-[13px] font-medium text-ink">
               <input type="checkbox" checked={updateContact} onChange={(e) => setUpdateContact(e.target.checked)} className="size-4 accent-[var(--accent)]" />

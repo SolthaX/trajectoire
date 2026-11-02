@@ -1,13 +1,42 @@
+import { Plus, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { CIVILITIES, CONTACT_STATUSES, PRIORITIES } from '../../../shared/constants';
 import type { Contact } from '../../../shared/types';
 import { CompanyPicker } from '../../components/pickers';
-import { Button } from '../../components/ui/button';
+import { Button, IconButton } from '../../components/ui/button';
 import { Field, FormGrid, Input, Select, Textarea } from '../../components/ui/form';
 import { Dialog } from '../../components/ui/overlay';
 import { errorMessage, useSave } from '../../lib/api';
 import { useFormState } from '../../lib/form';
+import { joinList, splitList } from '../../lib/format';
+
+/** Liste éditable de valeurs (stockées une par ligne). */
+function MultiInput({ label, value, onChange, type, placeholder, addLabel }: { label: string; value: string; onChange: (v: string) => void; type: string; placeholder: string; addLabel: string }) {
+  const items = value.split('\n');
+  const update = (next: string[]) => onChange(next.join('\n'));
+  return (
+    <Field label={label}>
+      {(id) => (
+        <div className="space-y-1.5">
+          {items.map((v, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <Input id={i === 0 ? id : undefined} type={type} value={v} placeholder={placeholder} onChange={(e) => update(items.map((x, j) => (j === i ? e.target.value : x)))} />
+              {items.length > 1 && (
+                <IconButton label="Retirer" size="xs" onClick={() => update(items.filter((_, j) => j !== i))}>
+                  <X />
+                </IconButton>
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={() => update([...items, ''])} className="inline-flex items-center gap-1 text-[12px] text-ink-3 hover:text-ink">
+            <Plus className="size-3" /> {addLabel}
+          </button>
+        </div>
+      )}
+    </Field>
+  );
+}
 
 const EMPTY = {
   civility: '',
@@ -51,8 +80,8 @@ export function ContactForm({
             last_name: contact.last_name,
             company_id: contact.company_id,
             role: contact.role,
-            email: contact.email,
-            phone: contact.phone,
+            email: splitList(contact.email).join('\n'),
+            phone: splitList(contact.phone).join('\n'),
             linkedin: contact.linkedin,
             status: contact.status,
             priority: contact.priority,
@@ -65,11 +94,12 @@ export function ContactForm({
   }, [open, contact, companyId, reset]);
 
   const valid = !!(values.first_name.trim() || values.last_name.trim() || values.email.trim());
+  const payload = () => ({ ...values, email: joinList(values.email.split('\n')), phone: joinList(values.phone.split('\n')) });
 
   const submit = async () => {
     if (!valid) return;
     try {
-      const saved = await save.mutateAsync({ id: contact?.id, ...values, next_followup: values.next_followup || null });
+      const saved = await save.mutateAsync({ id: contact?.id, ...payload(), next_followup: values.next_followup || null });
       toast.success(contact ? 'Contact mis à jour' : 'Contact ajouté');
       onOpenChange(false);
       onSaved?.(saved);
@@ -103,8 +133,8 @@ export function ContactForm({
         <FormGrid>
           <Field label="Entreprise">{(id) => <CompanyPicker id={id} value={values.company_id} onChange={(v) => set('company_id', v)} />}</Field>
           <Field label="Poste">{(id) => <Input id={id} {...bind('role')} placeholder="ex. Directrice technique" />}</Field>
-          <Field label="Email">{(id) => <Input id={id} type="email" {...bind('email')} placeholder="prenom.nom@entreprise.fr" />}</Field>
-          <Field label="Téléphone">{(id) => <Input id={id} type="tel" {...bind('phone')} placeholder="06 12 34 56 78" />}</Field>
+          <MultiInput label="Emails" type="email" value={values.email} onChange={(v) => set('email', v)} placeholder="prenom.nom@entreprise.fr" addLabel="Ajouter un email" />
+          <MultiInput label="Téléphones" type="tel" value={values.phone} onChange={(v) => set('phone', v)} placeholder="06 12 34 56 78" addLabel="Ajouter un numéro" />
           <Field label="LinkedIn" className="sm:col-span-2">
             {(id) => <Input id={id} {...bind('linkedin')} placeholder="https://www.linkedin.com/in/…" />}
           </Field>

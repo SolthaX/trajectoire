@@ -11,7 +11,7 @@ import { Textarea } from '../../components/ui/form';
 import { Menu, Sheet, SheetClose, useConfirm } from '../../components/ui/overlay';
 import { Avatar, Loading, Section } from '../../components/ui/misc';
 import { useItem, useList, useRemove, useSave, useSettings } from '../../lib/api';
-import { addDaysISO, daysFromToday, ensureUrl, fmtDate, fmtRelativeDay, fullName } from '../../lib/format';
+import { addDaysISO, daysFromToday, ensureUrl, fmtDate, fmtRelativeDay, fullName, splitList } from '../../lib/format';
 import { useContactSheet } from '../../lib/hooks';
 import { Timeline } from '../interactions/Timeline';
 import { ContactForm } from './ContactForm';
@@ -199,8 +199,12 @@ function ContactBody({ contact }: { contact: Contact }) {
         <Section title="Coordonnées">
           {contact.email || contact.phone || contact.linkedin ? (
             <div className="-mx-2">
-              {contact.email && <Channel icon={<Mail />} value={contact.email} href={`mailto:${contact.email}`} copyLabel="Copier l'email" />}
-              {contact.phone && <Channel icon={<Phone />} value={contact.phone} href={`tel:${contact.phone.replace(/\s/g, '')}`} copyLabel="Copier le numéro" />}
+              {splitList(contact.email).map((e) => (
+                <Channel key={e} icon={<Mail />} value={e} href={`mailto:${e}`} copyLabel="Copier l'email" />
+              ))}
+              {splitList(contact.phone).map((p) => (
+                <Channel key={p} icon={<Phone />} value={p} href={`tel:${p.replace(/\s/g, '')}`} copyLabel="Copier le numéro" />
+              ))}
               {contact.linkedin && (
                 <Channel
                   icon={<LinkedinIcon />}

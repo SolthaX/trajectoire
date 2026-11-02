@@ -176,7 +176,7 @@ export function CompanyPage() {
                             <span className="truncate text-[13.5px] font-medium text-ink">{fullName(c)}</span>
                             <PriorityIcon value={c.priority} />
                           </div>
-                          <div className="truncate text-[12px] text-ink-3">{c.role || c.email || '—'}</div>
+                          <div className="truncate text-[12px] text-ink-3">{c.role || c.email.split('\n')[0] || '—'}</div>
                         </div>
                         {c.next_followup && (
                           <span className={overdue ? 'text-[12px] font-medium text-danger' : 'text-[12px] text-ink-3'}>

@@ -69,7 +69,7 @@ export function addDaysISO(n: number, from?: string) {
 
 export function fullName(c?: { first_name?: string; last_name?: string; email?: string } | null) {
   if (!c) return '';
-  return `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim() || c.email || 'Sans nom';
+  return `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim() || splitList(c.email)[0] || 'Sans nom';
 }
 
 export function initials(name: string) {
@@ -110,4 +110,16 @@ export function hostname(url: string) {
 
 export function plural(n: number, one: string, many?: string) {
   return `${n} ${n > 1 ? (many ?? `${one}s`) : one}`;
+}
+
+/** Valeurs multiples (emails, téléphones) stockées une par ligne dans un seul champ texte. */
+export function splitList(s?: string | null): string[] {
+  return (s ?? '')
+    .split(/[\n;,]+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+export function joinList(values: string[]): string {
+  return values.map((x) => x.trim()).filter(Boolean).join('\n');
 }

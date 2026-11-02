@@ -10,7 +10,7 @@ import { Button, buttonClass } from '../../components/ui/button';
 import { Field, FormGrid, Input, Select, Textarea } from '../../components/ui/form';
 import { Dialog } from '../../components/ui/overlay';
 import { api, errorMessage, refreshAll, useList, useSettings } from '../../lib/api';
-import { addDaysISO, nowLocalISO } from '../../lib/format';
+import { addDaysISO, nowLocalISO, splitList } from '../../lib/format';
 import { buildVariables, fillTemplate } from '../../lib/template';
 import { suggestStatus } from '../interactions/InteractionForm';
 
@@ -49,7 +49,7 @@ export function MailComposer({ open, onOpenChange, contact }: { open: boolean; o
   // Valeurs initiales à l'ouverture.
   useEffect(() => {
     if (!open) return;
-    setTo(contact.email);
+    setTo(splitList(contact.email).join(', '));
     setOpened(false);
     setNextStatus(suggestStatus(contact.status, 'sortant', 'email'));
     setFollowup(addDaysISO(days));

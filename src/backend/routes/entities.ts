@@ -32,7 +32,7 @@ export const companies = crud({
       (SELECT COUNT(*) FROM contacts WHERE company_id = co.id) AS contacts_count,
       (SELECT COUNT(*) FROM jobs WHERE company_id = co.id) AS jobs_count,
       (SELECT COUNT(*) FROM projects WHERE company_id = co.id) AS projects_count,
-      (SELECT MAX(date) FROM interactions WHERE company_id = co.id) AS last_activity
+      (SELECT MAX(date) FROM interactions WHERE company_id = co.id AND direction != 'prevu') AS last_activity
     FROM companies co`,
   order: 'co.name COLLATE NOCASE',
   json: ['locations'],
@@ -94,7 +94,7 @@ export const contacts = crud({
   table: 'contacts',
   alias: 'c',
   select: `SELECT c.*, co.name AS company_name,
-      (SELECT MAX(date) FROM interactions WHERE contact_id = c.id) AS last_interaction
+      (SELECT MAX(date) FROM interactions WHERE contact_id = c.id AND direction != 'prevu') AS last_interaction
     FROM contacts c LEFT JOIN companies co ON co.id = c.company_id`,
   order: `CASE c.priority WHEN 'haute' THEN 0 WHEN 'moyenne' THEN 1 ELSE 2 END, c.last_name COLLATE NOCASE, c.first_name COLLATE NOCASE`,
   filters: { company_id: 'c.company_id', status: 'c.status', priority: 'c.priority' },
@@ -213,6 +213,7 @@ export const interactions = crud({
     date: required('La date'),
     subject: text,
     content: text,
+    link: text,
   }),
   prepare: (data, existing) => {
     if (!(data.company_id ?? existing?.company_id)) {

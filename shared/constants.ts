@@ -100,6 +100,7 @@ export const INTERACTION_TYPES = opts([
   { value: 'email', label: 'Email' },
   { value: 'appel', label: 'Appel' },
   { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'whatsapp', label: 'WhatsApp' },
   { value: 'rdv', label: 'Rendez-vous' },
   { value: 'candidature', label: 'Candidature' },
   { value: 'note', label: 'Note' },
@@ -108,6 +109,7 @@ export const INTERACTION_TYPES = opts([
 export const INTERACTION_DIRECTIONS = opts([
   { value: 'sortant', label: 'Envoyé / à mon initiative' },
   { value: 'entrant', label: 'Reçu / à leur initiative' },
+  { value: 'prevu', label: 'À faire (prévu)' },
 ] as const);
 
 export const TEMPLATE_CATEGORIES = opts([

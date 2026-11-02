@@ -161,6 +161,22 @@ export function DashboardPage() {
       onClick: () => navigate(iv.job_id ? `/offres/${iv.job_id}` : '/entretiens'),
     }));
 
+  const planned: TodoItem[] = data.planned
+    .filter((it) => daysFromToday(it.date) <= 7)
+    .map((it) => ({
+      key: `p${it.id}`,
+      icon: <InteractionIcon type={it.type} />,
+      tone: daysFromToday(it.date) < 0 ? 'danger' : daysFromToday(it.date) === 0 ? 'warning' : 'normal',
+      title: (
+        <>
+          {labelOf(INTERACTION_TYPES, it.type)} · <span className="font-medium">{it.contact_name || it.company_name || it.subject || '—'}</span>
+          {it.subject && (it.contact_name || it.company_name) && <span className="text-ink-3"> · {it.subject}</span>}
+        </>
+      ),
+      meta: fmtDateTime(it.date),
+      onClick: () => (it.contact_id ? openContact(it.contact_id) : it.company_id ? navigate(`/entreprises/${it.company_id}`) : undefined),
+    }));
+
   const deadlines: TodoItem[] = data.deadlines.map((j) => ({
     key: `d${j.id}`,
     icon: <Send />,
@@ -202,7 +218,7 @@ export function DashboardPage() {
     })),
   ];
 
-  const totalTodos = followups.length + interviews.length + deadlines.length + priorities.length;
+  const totalTodos = planned.length + followups.length + interviews.length + deadlines.length + priorities.length;
   const statusRows = CONTACT_STATUSES.map((s) => ({
     key: s.value,
     label: s.label,
@@ -249,7 +265,7 @@ export function DashboardPage() {
 
       <div className="mb-6 grid gap-5 lg:grid-cols-12">
         <Card className="lg:col-span-7">
-          <CardHeader title="À faire" subtitle={totalTodos ? 'Relances, entretiens et échéances des 7 prochains jours.' : undefined} />
+          <CardHeader title="À faire" subtitle={totalTodos ? 'Messages et calls prévus, relances, entretiens et échéances des 7 prochains jours.' : undefined} />
           {totalTodos === 0 ? (
             <div className="flex flex-col items-center py-8 text-center">
               <CheckCircle2 className="mb-2 size-6 text-success" />
@@ -258,6 +274,7 @@ export function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-5">
+              <TodoGroup title="Messages et calls prévus" items={planned} />
               <TodoGroup title="Relances" items={followups} />
               <TodoGroup title="Entretiens" items={interviews} />
               <TodoGroup title="Échéances" items={deadlines} />

@@ -1,13 +1,13 @@
 import { clsx } from 'clsx';
-import { ArrowDownLeft, MessageSquarePlus } from 'lucide-react';
+import { ArrowDownLeft, CalendarPlus, Check, MessageSquarePlus, Video } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { INTERACTION_TYPES, labelOf } from '../../../shared/constants';
 import type { Interaction } from '../../../shared/types';
 import { Button } from '../../components/ui/button';
 import { EmptyState } from '../../components/ui/misc';
-import { useList } from '../../lib/api';
-import { fmtDate, fmtTime } from '../../lib/format';
+import { useList, useSave } from '../../lib/api';
+import { ensureUrl, fmtDate, fmtTime, nowLocalISO } from '../../lib/format';
 import { useContactSheet } from '../../lib/hooks';
 import { InteractionForm } from './InteractionForm';
 import { InteractionIcon } from './InteractionIcon';
@@ -17,13 +17,15 @@ function Entry({ it, onEdit, showContact, showCompany }: { it: Interaction; onEd
   const { open } = useContactSheet();
   const long = it.content.length > 280 || it.content.split('\n').length > 5;
   const incoming = it.direction === 'entrant';
+  const planned = it.direction === 'prevu';
+  const save = useSave('interactions');
   return (
     <li className="group relative flex gap-3 pb-5 last:pb-0">
       <span className="absolute top-8 bottom-0 left-[13px] w-px bg-line group-last:hidden" aria-hidden />
       <span
         className={clsx(
           'relative z-[1] flex size-[27px] shrink-0 items-center justify-center rounded-full border',
-          incoming ? 'border-accent/30 bg-accent-soft text-accent-ink' : 'border-line bg-surface text-ink-2',
+          planned ? 'border-dashed border-amber-400 bg-surface text-amber-600' : incoming ? 'border-accent/30 bg-accent-soft text-accent-ink' : 'border-line bg-surface text-ink-2',
         )}
       >
         <InteractionIcon type={it.type} className="size-3.5" />
@@ -37,6 +39,7 @@ function Entry({ it, onEdit, showContact, showCompany }: { it: Interaction; onEd
                 <ArrowDownLeft className="size-3" /> reçu
               </span>
             )}
+            {planned && <span className="ml-1.5 rounded bg-amber-100 px-1.5 py-px text-[11px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">à faire</span>}
           </span>
           {showContact && it.contact_name && it.contact_id && (
             <button onClick={() => open(it.contact_id!)} className="text-ink-2 hover:text-accent-ink hover:underline">
@@ -52,11 +55,24 @@ function Entry({ it, onEdit, showContact, showCompany }: { it: Interaction; onEd
             {fmtDate(it.date)}
             {fmtTime(it.date) && ` · ${fmtTime(it.date)}`}
           </span>
-          <button onClick={onEdit} className="ml-auto text-[12px] text-ink-3 opacity-0 group-hover:opacity-100 hover:text-ink focus:opacity-100">
+          {planned && (
+            <button
+              onClick={() => save.mutate({ id: it.id, direction: 'sortant', date: it.date > nowLocalISO() ? nowLocalISO() : it.date })}
+              className="ml-auto inline-flex items-center gap-0.5 text-[12px] text-accent-ink hover:underline"
+            >
+              <Check className="size-3" /> Fait
+            </button>
+          )}
+          <button onClick={onEdit} className={clsx(!planned && 'ml-auto', ' text-[12px] text-ink-3 opacity-0 group-hover:opacity-100 hover:text-ink focus:opacity-100')}>
             Modifier
           </button>
         </div>
         {it.subject && <div className="mt-0.5 text-[13px] font-medium text-ink">{it.subject}</div>}
+        {it.link && (
+          <a href={ensureUrl(it.link)} target="_blank" rel="noreferrer" className="mt-0.5 inline-flex items-center gap-1 text-[12px] text-accent-ink hover:underline">
+            <Video className="size-3" /> Rejoindre la visio
+          </a>
+        )}
         {it.job_title && it.job_id && (
           <Link to={`/offres/${it.job_id}`} className="mt-0.5 inline-block text-[12px] text-ink-3 hover:text-accent-ink">
             Offre : {it.job_title}
@@ -94,21 +110,38 @@ export function Timeline({
   const { data = [] } = useList('interactions', filter);
   const [editing, setEditing] = useState<Interaction | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [planMode, setPlanMode] = useState(false);
+  // Actions prévues en tête, de la plus proche à la plus lointaine.
+  const sorted = [...data.filter((i) => i.direction === 'prevu').reverse(), ...data.filter((i) => i.direction !== 'prevu')];
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
         <span className="text-[12.5px] text-ink-3">{data.length ? `${data.length} échange${data.length > 1 ? 's' : ''}` : ''}</span>
-        <Button
-          size="sm"
-          icon={<MessageSquarePlus />}
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
-        >
-          Noter un échange
-        </Button>
+        <div className="flex gap-1.5">
+          <Button
+            size="sm"
+            icon={<CalendarPlus />}
+            onClick={() => {
+              setEditing(null);
+              setPlanMode(true);
+              setFormOpen(true);
+            }}
+          >
+            Planifier
+          </Button>
+          <Button
+            size="sm"
+            icon={<MessageSquarePlus />}
+            onClick={() => {
+              setEditing(null);
+              setPlanMode(false);
+              setFormOpen(true);
+            }}
+          >
+            Noter un échange
+          </Button>
+        </div>
       </div>
       {data.length === 0 ? (
         <EmptyState
@@ -118,7 +151,7 @@ export function Timeline({
         />
       ) : (
         <ol>
-          {data.map((it) => (
+          {sorted.map((it) => (
             <Entry
               key={it.id}
               it={it}
@@ -132,7 +165,7 @@ export function Timeline({
           ))}
         </ol>
       )}
-      <InteractionForm open={formOpen} onOpenChange={setFormOpen} interaction={editing} defaults={{ ...filter, ...defaults }} />
+      <InteractionForm open={formOpen} onOpenChange={setFormOpen} interaction={editing} defaults={{ ...filter, ...defaults, ...(planMode ? { direction: 'prevu' } : {}) }} />
     </div>
   );
 }

@@ -114,6 +114,7 @@ const SCHEMA = `
     date TEXT NOT NULL,
     subject TEXT NOT NULL DEFAULT '',
     content TEXT NOT NULL DEFAULT '',
+    link TEXT NOT NULL DEFAULT '',
     ${stamps}
   );
   CREATE TABLE templates (
@@ -240,8 +241,10 @@ export function importSnapshot(s: Snapshot) {
     transaction(() => {
       for (const t of [...TABLES, 'tombstones']) db.exec(`DELETE FROM ${t}`);
       for (const t of TABLES) {
+        // Colonnes inconnues ignorées : un instantané plus récent (autre appareil) reste importable.
+        const known = new Set(all<{ name: string }>(`PRAGMA table_info(${t})`).map((c) => c.name));
         for (const row of s.tables[t] ?? []) {
-          const cols = Object.keys(row);
+          const cols = Object.keys(row).filter((k) => known.has(k));
           if (!cols.length) continue;
           run(`INSERT OR REPLACE INTO ${t} (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`, ...cols.map((k) => row[k]));
         }
