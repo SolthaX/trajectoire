@@ -101,6 +101,7 @@ export const INTERACTION_TYPES = opts([
   { value: 'appel', label: 'Appel' },
   { value: 'linkedin', label: 'LinkedIn' },
   { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'sms', label: 'SMS' },
   { value: 'rdv', label: 'Rendez-vous' },
   { value: 'candidature', label: 'Candidature' },
   { value: 'note', label: 'Note' },

@@ -4,6 +4,7 @@ import {
   Briefcase,
   Building2,
   CalendarClock,
+  Send,
   Columns3,
   FolderOpen,
   LayoutDashboard,
@@ -110,6 +111,7 @@ function Sidebar({ onSearch, onNavigate }: { onSearch: () => void; onNavigate?: 
             { to: '/entreprises', label: 'Entreprises', icon: <Building2 /> },
             { to: '/contacts', label: 'Contacts', icon: <Users />, badge: due },
             { to: '/offres', label: 'Offres', icon: <Briefcase /> },
+            { to: '/a-envoyer', label: 'À envoyer', icon: <Send /> },
             { to: '/entretiens', label: 'Entretiens', icon: <CalendarClock /> },
           ]}
         />

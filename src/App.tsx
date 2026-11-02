@@ -8,6 +8,7 @@ import { DashboardPage } from './features/dashboard/DashboardPage';
 import { InterviewsPage } from './features/interviews/InterviewsPage';
 import { JobPage } from './features/jobs/JobPage';
 import { JobsPage } from './features/jobs/JobsPage';
+import { PlannedPage } from './features/planned/PlannedPage';
 import { PipelinePage } from './features/pipeline/PipelinePage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { TemplatesPage } from './features/templates/TemplatesPage';
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { path: 'contacts', element: <ContactsPage /> },
       { path: 'offres', element: <JobsPage /> },
       { path: 'offres/:id', element: <JobPage /> },
+      { path: 'a-envoyer', element: <PlannedPage /> },
       { path: 'entretiens', element: <InterviewsPage /> },
       { path: 'modeles', element: <TemplatesPage /> },
       { path: 'documents', element: <DocumentsPage /> },

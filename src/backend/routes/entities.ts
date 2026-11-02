@@ -203,7 +203,7 @@ export const interactions = crud({
     LEFT JOIN jobs j ON j.id = i.job_id
     LEFT JOIN contacts ct ON ct.id = i.contact_id`,
   order: 'i.date DESC, i.id DESC',
-  filters: { company_id: 'i.company_id', contact_id: 'i.contact_id', job_id: 'i.job_id', type: 'i.type' },
+  filters: { company_id: 'i.company_id', contact_id: 'i.contact_id', job_id: 'i.job_id', type: 'i.type', direction: 'i.direction' },
   schema: z.object({
     contact_id: id,
     company_id: id,

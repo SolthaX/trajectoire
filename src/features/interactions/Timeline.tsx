@@ -1,5 +1,6 @@
 import { clsx } from 'clsx';
-import { ArrowDownLeft, CalendarPlus, Check, MessageSquarePlus, Video } from 'lucide-react';
+import { ArrowDownLeft, CalendarPlus, Check, Copy, MessageSquarePlus, Video } from 'lucide-react';
+import { toast } from 'sonner';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { INTERACTION_TYPES, labelOf } from '../../../shared/constants';
@@ -68,6 +69,17 @@ function Entry({ it, onEdit, showContact, showCompany }: { it: Interaction; onEd
           </button>
         </div>
         {it.subject && <div className="mt-0.5 text-[13px] font-medium text-ink">{it.subject}</div>}
+        {planned && it.content && (
+          <button
+            onClick={async () => {
+              await navigator.clipboard.writeText(it.content);
+              toast.success('Message copié');
+            }}
+            className="mt-0.5 mr-3 inline-flex items-center gap-1 text-[12px] text-accent-ink hover:underline"
+          >
+            <Copy className="size-3" /> Copier le message
+          </button>
+        )}
         {it.link && (
           <a href={ensureUrl(it.link)} target="_blank" rel="noreferrer" className="mt-0.5 inline-flex items-center gap-1 text-[12px] text-accent-ink hover:underline">
             <Video className="size-3" /> Rejoindre la visio
@@ -100,14 +112,16 @@ export function Timeline({
   showContact = true,
   showCompany = false,
   compactEmpty,
+  plannedOnly,
 }: {
   filter: { contact_id?: number; company_id?: number; job_id?: number };
   defaults?: { contact_id?: number | null; company_id?: number | null; job_id?: number | null };
   showContact?: boolean;
   showCompany?: boolean;
   compactEmpty?: boolean;
+  plannedOnly?: boolean;
 }) {
-  const { data = [] } = useList('interactions', filter);
+  const { data = [] } = useList('interactions', plannedOnly ? { ...filter, direction: 'prevu' } : filter);
   const [editing, setEditing] = useState<Interaction | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [planMode, setPlanMode] = useState(false);
@@ -117,7 +131,7 @@ export function Timeline({
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-[12.5px] text-ink-3">{data.length ? `${data.length} échange${data.length > 1 ? 's' : ''}` : ''}</span>
+        <span className="text-[12.5px] text-ink-3">{data.length ? `${data.length} ${plannedOnly ? 'action' : 'échange'}${data.length > 1 ? 's' : ''}${plannedOnly ? ' à faire' : ''}` : ''}</span>
         <div className="flex gap-1.5">
           <Button
             size="sm"
@@ -130,7 +144,7 @@ export function Timeline({
           >
             Planifier
           </Button>
-          <Button
+          {!plannedOnly && <Button
             size="sm"
             icon={<MessageSquarePlus />}
             onClick={() => {
@@ -140,14 +154,14 @@ export function Timeline({
             }}
           >
             Noter un échange
-          </Button>
+          </Button>}
         </div>
       </div>
       {data.length === 0 ? (
         <EmptyState
           compact={compactEmpty ?? true}
-          title="Aucun échange"
-          description="Mails, appels, messages LinkedIn, rendez-vous : gardez une trace de chaque échange."
+          title={plannedOnly ? 'Rien de planifié' : 'Aucun échange'}
+          description={plannedOnly ? 'Préparez vos mails, messages LinkedIn, WhatsApp, SMS et calls avec « Planifier ».' : 'Mails, appels, messages LinkedIn, rendez-vous : gardez une trace de chaque échange.'}
         />
       ) : (
         <ol>

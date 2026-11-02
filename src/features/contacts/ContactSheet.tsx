@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Briefcase, Check, Copy, Mail, MoreHorizontal, Pencil, Phone, Trash2, X } from 'lucide-react';
+import { Briefcase, CalendarPlus, Check, Copy, Mail, MoreHorizontal, Pencil, Phone, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -15,7 +15,7 @@ import { addDaysISO, daysFromToday, ensureUrl, fmtDate, fmtRelativeDay, fullName
 import { useContactSheet } from '../../lib/hooks';
 import { Timeline } from '../interactions/Timeline';
 import { ContactForm } from './ContactForm';
-import { MailComposer } from './MailComposer';
+import { InteractionForm } from '../interactions/InteractionForm';
 
 function CopyButton({ value, label }: { value: string; label: string }) {
   const [done, setDone] = useState(false);
@@ -128,7 +128,7 @@ function ContactBody({ contact }: { contact: Contact }) {
   const { close } = useContactSheet();
   const { data: jobs = [] } = useList('jobs', { contact_id: contact.id });
   const [editOpen, setEditOpen] = useState(false);
-  const [mailOpen, setMailOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
   const name = fullName(contact);
 
   const del = async () => {
@@ -186,8 +186,8 @@ function ContactBody({ contact }: { contact: Contact }) {
 
       <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
         <div className="flex gap-2">
-          <Button variant="primary" icon={<Mail />} onClick={() => setMailOpen(true)} className="flex-1">
-            Écrire un mail
+          <Button variant="primary" icon={<CalendarPlus />} onClick={() => setPlanOpen(true)} className="flex-1">
+            Planifier un échange
           </Button>
           <Button icon={<Pencil />} onClick={() => setEditOpen(true)}>
             Modifier
@@ -257,7 +257,7 @@ function ContactBody({ contact }: { contact: Contact }) {
       </div>
 
       <ContactForm open={editOpen} onOpenChange={setEditOpen} contact={contact} />
-      <MailComposer open={mailOpen} onOpenChange={setMailOpen} contact={contact} />
+      <InteractionForm open={planOpen} onOpenChange={setPlanOpen} defaults={{ contact_id: contact.id, direction: 'prevu' }} />
     </>
   );
 }
