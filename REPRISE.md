@@ -1,16 +1,16 @@
 # Reprise — Trajectoire (dashboard de recherche d'emploi)
 
-> Dernière mise à jour : 2026-11-02 11:05 · branche `main` · commit `f8821b9` · en ligne : https://solthax.github.io/trajectoire/
+> Dernière mise à jour : 2026-11-02 18:42 · branche `main` · commit `5bfbf65` · en ligne : https://solthax.github.io/trajectoire/
 > Fichier maintenu par `/end` (lu par `/start`). Aucune donnée sensible ici.
 
 ## Indicateurs
 
 | Indicateur | Valeur |
 |---|---|
-| Objectifs du jalon en cours | 7/8 (88 %) : reste le premier test réel avec le jeton |
-| Tests | Pas de suite dans le dépôt ; 26 vérifications navigateur (Playwright, hors dépôt) passées : 13 version statique, 8 synchro 2 appareils, 5 documents |
+| Objectifs du jalon en cours | 7/8 (88 %) : reste le premier test réel avec le jeton · jalon « usage » : 4/5 |
+| Tests | Pas de suite dans le dépôt ; 26 vérifications navigateur (Playwright, hors dépôt) + 2026-11-02 : import d'instantané ancien format sans perte, compilation rapide testée depuis Chromium (PDF 0,8 s, erreurs extraites) |
 | Lint / typecheck | `npm run typecheck` OK · `npm run build` OK |
-| Commits (total / depuis la dernière reprise) | 3 / 2 |
+| Commits (total / depuis la dernière reprise) | 10 / 6 |
 | Modifications non commitées | aucune |
 
 ## État actuel
@@ -23,13 +23,21 @@ LaTeX par GitHub Actions (Tectonic). Tout a été testé contre un faux GitHub e
 
 ## Fait lors de la dernière session
 
-- Correctif : l'icône Benkyō ouvrait Trajectoire (même id de manifeste `./` → racine du domaine).
-  Ids absolus `/trajectoire/` (contrôlé au build) et `/JapaneseStudy/`, vérifiés dans Chromium (`Page.getAppId`).
-- Benkyō ne supprime plus les caches ni le localStorage des autres apps de l'origine ; SW des deux apps en `cache: 'reload'`.
-- JapaneseStudy cloné dans `~/projets/JapaneseStudy` (commit `85a738b`, poussé).
+- Contacts : plusieurs emails / téléphones (stockés une valeur par ligne dans `email` / `phone`, sans migration).
+- Échanges planifiés : sens `prevu` + colonne `link` (lien visio) dans `interactions` ; types WhatsApp et SMS ;
+  exclus des stats d'activité. Onglet **À envoyer** (`src/features/planned/PlannedPage.tsx`), bouton « Fait »,
+  « Copier le message » ; « Planifier un échange » remplace « Écrire un mail » sur la fiche contact ;
+  groupe « Messages et calls prévus » dans l'À faire du tableau de bord.
+- `importSnapshot` ignore les colonnes inconnues (un appareil pas à jour ne plante plus sur un instantané plus récent).
+- Palette : Alabaster, Tan, Light blue, Midnight blue, Maroon + Corail, Safran, Sauge, Prune (`src/styles.css`) ;
+  fond Light blue, barre latérale `.side` Midnight blue (Maroon en sombre), boutons primaires `bg-brand`.
+- Compilation LaTeX **rapide** en option (Paramètres › Compilation LaTeX) via latex.ytotech.com (`compileFast`
+  dans `src/lib/files.ts`) : ~2 s, commit `[skip ci]` ; GitHub Actions reste le défaut.
 
 ## En cours
 
+- L'utilisateur a 4 contacts réels dans l'app : toute évolution doit préserver les données (instantané compatible).
+- Compilation rapide non testée de bout en bout sur le vrai dépôt (commit PDF, `[skip ci]` respecté).
 - Publié par l'utilisateur via `./scripts/publier-github.sh` : Pages déployé, dépôt privé `trajectoire-donnees`
   initialisé, premier passage du workflow LaTeX réussi (1 min 13, PDF commité par le bot).
 - Reste : jeton fine-grained, installation dans Chrome, connexion GitHub dans Paramètres.
@@ -51,11 +59,18 @@ LaTeX par GitHub Actions (Tectonic). Tout a été testé contre un faux GitHub e
 - [x] Publier : `./scripts/publier-github.sh` (dépôt public `trajectoire` + Pages, dépôt privé `trajectoire-donnees`)
 - [ ] Premier vrai test : jeton fine-grained, synchro, compilation du CV d'exemple, aperçu PDF dans Chrome
 
+## Objectifs (jalon : usage quotidien)
+
+- [x] Plusieurs emails / téléphones par contact
+- [x] Planifier mails, messages LinkedIn / WhatsApp / SMS et calls (thème, lien visio) + onglet « À envoyer »
+- [x] Palette de couleurs personnalisée et étendue
+- [x] Compilation LaTeX rapide en option
+- [ ] Vérifier la compilation rapide sur le vrai dépôt
+
 ## Prochaine étape proposée
 
-Réinstaller proprement les deux apps dans Chrome (voir « En cours »), puis créer le jeton (Contents RW +
-Actions RW, limité à `trajectoire-donnees`), connecter GitHub dans les Paramètres de Trajectoire,
-ouvrir le CV d'exemple (le PDF existe déjà) et recompiler après une modification.
+Connecter GitHub dans les Paramètres (si pas déjà fait), activer « Rapide » dans Paramètres › Compilation LaTeX,
+compiler le CV d'exemple et vérifier : PDF dans le dépôt, journal `.latex/`, aucune exécution Actions déclenchée.
 
 ## Décisions prises
 
@@ -67,6 +82,12 @@ ouvrir le CV d'exemple (le PDF existe déjà) et recompiler après une modificat
 - 2026-11-02 : jeton fine-grained limité au dépôt privé, gardé dans le navigateur, jamais synchronisé ;
   l'app refuse un dépôt public.
 - 2026-11-01 : statuts définis dans `shared/constants.ts`.
+- 2026-11-02 : emails / téléphones multiples dans les colonnes existantes (une valeur par ligne) plutôt qu'une
+  nouvelle table : aucune migration, données existantes intactes.
+- 2026-11-02 : actions planifiées = interactions de sens `prevu` (pas de table séparée) ; « Fait » les passe en `sortant`.
+- 2026-11-02 : compilation via claucloverleaf écartée (MCP local, inaccessible depuis une page web) ; service
+  latex.ytotech.com accepté par l'utilisateur **en option**, risques expliqués, GitHub par défaut. Revient sur
+  la décision « service tiers écarté » ci-dessus pour ce seul usage optionnel.
 - 2026-11-02 : chaque app de `solthax.github.io` a un id de manifeste absolu (`/trajectoire/`, `/JapaneseStudy/`),
   contrôlé au build pour Trajectoire. Sur l'origine partagée, chaque app ne touche qu'à ses propres caches et
   clés (`trajectoire-*` / `trajectoire:*`, `benkyo-*`).
@@ -77,3 +98,5 @@ ouvrir le CV d'exemple (le PDF existe déjà) et recompiler après une modificat
   compilations suivantes (cache Tectonic), affichage des PDF en URL blob dans Chrome.
 - Un CV utilisant des polices système (Arial…) échouera sur le runner Linux : préférer les polices de Tectonic.
 - Idées non retenues : carte des localisations, statuts personnalisables.
+- `MailComposer.tsx` n'est plus accessible depuis la fiche contact : le supprimer si l'utilisateur confirme.
+- Contraste de la date du tableau de bord (gris sur Light blue) à revoir si gênant.
