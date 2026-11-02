@@ -41,7 +41,7 @@ type DialogState =
   | { type: 'tex'; dir: string }
   | { type: 'rename'; node: FileNode };
 
-const EXPANDED_KEY = 'documents.expanded';
+const EXPANDED_KEY = 'trajectoire:documents.expanded';
 
 function loadExpanded(): string[] | null {
   try {

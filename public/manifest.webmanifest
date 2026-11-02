@@ -2,7 +2,7 @@
   "name": "Trajectoire · Recherche d'emploi",
   "short_name": "Trajectoire",
   "description": "Piloter sa recherche d'emploi : entreprises, contacts, relances, offres, entretiens et documents.",
-  "id": "./",
+  "id": "/trajectoire/",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

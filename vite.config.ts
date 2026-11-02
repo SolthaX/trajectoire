@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync } from 'node:fs';
+import { copyFileSync, existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -29,6 +29,12 @@ function pwa(): Plugin {
     closeBundle() {
       const index = resolve(outDir, 'index.html');
       if (existsSync(index)) copyFileSync(index, resolve(outDir, '404.html'));
+      // Chrome résout l'id du manifeste depuis la racine du domaine : « ./ » donnerait
+      // https://solthax.github.io/ pour toutes les apps Pages, qui s'écraseraient à l'installation.
+      const { id } = JSON.parse(readFileSync(resolve(outDir, 'manifest.webmanifest'), 'utf8'));
+      if (base !== '/' && id !== base) {
+        throw new Error(`manifest.webmanifest : "id" vaut "${id}", attendu "${base}" (identité unique de l'app installée).`);
+      }
     },
   };
 }
@@ -39,7 +45,9 @@ const CACHE = 'trajectoire-${version}';
 const ASSETS = ${JSON.stringify(assets)};
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // cache: 'reload' : contourne le cache HTTP (10 min sur Pages) pour ne pas figer un vieux manifeste.
+  const fresh = ASSETS.map((a) => new Request(a, { cache: 'reload' }));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(fresh)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
