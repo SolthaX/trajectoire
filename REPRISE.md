@@ -1,17 +1,17 @@
 # Reprise — Trajectoire (dashboard de recherche d'emploi)
 
-> Dernière mise à jour : 2026-11-02 00:10 · branche `main` · aucun commit (publication en attente de `scripts/publier-github.sh`)
+> Dernière mise à jour : 2026-11-02 09:28 · branche `main` · commit `fa48fb2` · en ligne : https://solthax.github.io/trajectoire/
 > Fichier maintenu par `/end` (lu par `/start`). Aucune donnée sensible ici.
 
 ## Indicateurs
 
 | Indicateur | Valeur |
 |---|---|
-| Objectifs du jalon en cours | 6/8 (75 %) : reste la publication et le premier vrai test GitHub |
+| Objectifs du jalon en cours | 7/8 (88 %) : reste le premier test réel avec le jeton |
 | Tests | Pas de suite dans le dépôt ; 26 vérifications navigateur (Playwright, hors dépôt) passées : 13 version statique, 8 synchro 2 appareils, 5 documents |
 | Lint / typecheck | `npm run typecheck` OK · `npm run build` OK |
-| Commits (total / depuis la dernière reprise) | 0 / 0 |
-| Modifications non commitées | tout le projet |
+| Commits (total / depuis la dernière reprise) | 1 / 1 |
+| Modifications non commitées | REPRISE.md |
 
 ## État actuel
 
@@ -34,8 +34,15 @@ LaTeX par GitHub Actions (Tectonic). Tout a été testé contre un faux GitHub e
 
 ## En cours
 
-- Publication : la création des dépôts a été bloquée par le garde-fou d'autorisations, l'utilisateur doit
-  lancer `./scripts/publier-github.sh` (ou autoriser l'action).
+- Publié par l'utilisateur via `./scripts/publier-github.sh` : Pages déployé, dépôt privé `trajectoire-donnees`
+  initialisé, premier passage du workflow LaTeX réussi (1 min 13, PDF commité par le bot).
+- Reste : jeton fine-grained, installation dans Chrome, connexion GitHub dans Paramètres.
+- 2026-11-02 : l'icône Benkyō épinglée ouvrait Trajectoire. Les deux manifestes avaient `"id": "./"`, que
+  Chrome résout depuis la racine du domaine (`https://solthax.github.io/`) : même identité, l'installation de
+  Trajectoire a remplacé Benkyō. Corrigé dans les deux dépôts (Trajectoire `fa48fb2`, JapaneseStudy `85a738b`,
+  cloné dans `~/projets/JapaneseStudy`) et vérifié dans Chromium (`Page.getAppId`) : deux identités distinctes.
+  **À faire par l'utilisateur dans Chrome** : désinstaller l'app actuelle, **sans** cocher « effacer les données »
+  (ce qui viderait les données des deux apps), puis réinstaller et réépingler Benkyō et Trajectoire depuis leurs URL.
 
 ## Objectifs (jalon : web app publiée et épinglée)
 
@@ -45,14 +52,14 @@ LaTeX par GitHub Actions (Tectonic). Tout a été testé contre un faux GitHub e
 - [x] Web app installable (manifeste, icônes, service worker)
 - [x] Workflow de déploiement GitHub Pages
 - [x] README à jour
-- [ ] Publier : `./scripts/publier-github.sh` (dépôt public `trajectoire` + Pages, dépôt privé `trajectoire-donnees`)
+- [x] Publier : `./scripts/publier-github.sh` (dépôt public `trajectoire` + Pages, dépôt privé `trajectoire-donnees`)
 - [ ] Premier vrai test : jeton fine-grained, synchro, compilation du CV d'exemple, aperçu PDF dans Chrome
 
 ## Prochaine étape proposée
 
-Lancer `./scripts/publier-github.sh`, créer le jeton (Contents RW + Actions RW, limité à `trajectoire-donnees`),
-ouvrir `https://solthax.github.io/trajectoire/` dans Chrome, installer et épingler, connecter GitHub dans
-Paramètres, puis compiler le CV d'exemple.
+Réinstaller proprement les deux apps dans Chrome (voir « En cours »), puis créer le jeton (Contents RW +
+Actions RW, limité à `trajectoire-donnees`), connecter GitHub dans les Paramètres de Trajectoire,
+ouvrir le CV d'exemple (le PDF existe déjà) et recompiler après une modification.
 
 ## Décisions prises
 
@@ -64,10 +71,13 @@ Paramètres, puis compiler le CV d'exemple.
 - 2026-11-02 : jeton fine-grained limité au dépôt privé, gardé dans le navigateur, jamais synchronisé ;
   l'app refuse un dépôt public.
 - 2026-11-01 : statuts définis dans `shared/constants.ts`.
+- 2026-11-02 : chaque app de `solthax.github.io` a un id de manifeste absolu (`/trajectoire/`, `/JapaneseStudy/`),
+  contrôlé au build pour Trajectoire. Sur l'origine partagée, chaque app ne touche qu'à ses propres caches et
+  clés (`trajectoire-*` / `trajectoire:*`, `benkyo-*`).
 
 ## Points ouverts / questions
 
-- Vérifier sur le vrai GitHub : durée du premier passage du workflow LaTeX (≈ 1 min 30, téléchargement des
-  paquets), `listRuns(sha)` pour un push via l'API, affichage des PDF en URL blob dans Chrome.
+- Vérifier sur le vrai GitHub : `listRuns(sha)` pour un push fait depuis l'app (API Git Data), durée des
+  compilations suivantes (cache Tectonic), affichage des PDF en URL blob dans Chrome.
 - Un CV utilisant des polices système (Arial…) échouera sur le runner Linux : préférer les polices de Tectonic.
 - Idées non retenues : carte des localisations, statuts personnalisables.
