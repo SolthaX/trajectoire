@@ -6,8 +6,9 @@ import { toast } from 'sonner';
 import { Button, IconButton } from '../../components/ui/button';
 import { Segmented } from '../../components/ui/form';
 import { EmptyState, Kbd, Loading, Spinner } from '../../components/ui/misc';
-import { errorMessage } from '../../lib/api';
+import { errorMessage, useSettings } from '../../lib/api';
 import {
+  compileFast,
   dispatchLatex,
   downloadFile,
   fetchSnapshot,
@@ -28,6 +29,7 @@ type Layout = 'split' | 'code' | 'pdf';
 type Phase =
   | { kind: 'idle' }
   | { kind: 'saving' }
+  | { kind: 'fast'; startedAt: number }
   | { kind: 'waiting'; status: 'pending' | 'queued' | 'in_progress'; startedAt: number; runUrl?: string };
 
 interface CompileLog {
@@ -65,6 +67,7 @@ function LogLine({ line }: { line: string }) {
 
 function phaseLabel(phase: Phase, now: number) {
   if (phase.kind === 'saving') return 'Enregistrement sur GitHub…';
+  if (phase.kind === 'fast') return `Compilation rapide… ${Math.max(0, Math.round((now - phase.startedAt) / 1000))} s`;
   if (phase.kind !== 'waiting') return '';
   const s = Math.max(0, Math.round((now - phase.startedAt) / 1000));
   if (phase.status === 'pending') return `Envoi à GitHub Actions… ${s} s`;
@@ -75,6 +78,8 @@ function phaseLabel(phase: Phase, now: number) {
 function LatexEditorInner({ path, initial, onDirtyChange }: { path: string; initial: string; onDirtyChange: (d: boolean) => void }) {
   const qc = useQueryClient();
   const snapshot = useDocsSnapshot();
+  const { data: settings } = useSettings();
+  const fast = settings?.latex_engine === 'rapide';
   const [code, setCode] = useState(initial);
   const [saved, setSaved] = useState(initial);
   const [saving, setSaving] = useState(false);
@@ -98,24 +103,24 @@ function LatexEditorInner({ path, initial, onDirtyChange }: { path: string; init
   const dirty = code !== saved;
   const busy = phase.kind !== 'idle';
   const saveState: SaveState = saving ? 'saving' : dirty ? 'dirty' : 'saved';
-  const workflowMissing = snapshot.data ? !snapshot.data.hasWorkflow : false;
+  const workflowMissing = snapshot.data && !fast ? !snapshot.data.hasWorkflow : false;
 
   useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange]);
 
   // Chronomètre affiché pendant l'attente de GitHub Actions.
   useEffect(() => {
-    if (phase.kind !== 'waiting') return;
+    if (phase.kind !== 'waiting' && phase.kind !== 'fast') return;
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, [phase.kind]);
 
   /** Enregistre (un commit) ; renvoie l'empreinte du commit, ou null si rien à enregistrer / échec. */
-  const save = async (): Promise<string | null | false> => {
+  const save = async (message?: string): Promise<string | null | false> => {
     if (!dirty) return null;
     const content = code;
     setSaving(true);
     try {
-      const res = await filesApi.saveText(path, content);
+      const res = await filesApi.saveText(path, content, message ? { message } : {});
       setSaved(content);
       qc.setQueryData(fileKeys.text(path), { path, content, mtime: res.mtime, sha: '' });
       return res.commit;
@@ -127,8 +132,43 @@ function LatexEditorInner({ path, initial, onDirtyChange }: { path: string; init
     }
   };
 
+  /** Compilation par le service en ligne : quelques secondes, PDF enregistré dans le dépôt. */
+  const compileFastNow = async () => {
+    setLog(null);
+    const startedAt = Date.now();
+    setNow(startedAt);
+    setPhase({ kind: 'fast', startedAt });
+    const content = code;
+    try {
+      const result = await compileFast(path, content);
+      if (!alive.current) return;
+      if (result.ok) {
+        setSaved(content);
+        qc.setQueryData(fileKeys.text(path), { path, content, mtime: Date.now(), sha: '' });
+        setLog({ ok: true, text: result.log });
+        setLogOpen(false);
+        if (layout === 'code') setLayout('split');
+        toast.success(`PDF à jour (${result.seconds} s)`);
+      } else {
+        // Échec : le .tex est quand même enregistré, sans relancer GitHub Actions.
+        await save(`LaTeX : ${path.split('/').pop()} [skip ci]`);
+        setLog({ ok: false, text: result.log });
+        setLogOpen(true);
+        toast.error('La compilation a échoué — voir le journal');
+      }
+    } catch (e) {
+      if (!alive.current) return;
+      setLog({ ok: false, text: errorMessage(e) });
+      setLogOpen(true);
+      toast.error(errorMessage(e));
+    } finally {
+      if (alive.current) setPhase({ kind: 'idle' });
+    }
+  };
+
   const compile = async () => {
     if (busy) return;
+    if (fast) return compileFastNow();
     if (workflowMissing) {
       if (dirty) await save();
       toast.error('Installez d’abord le workflow de compilation (bandeau en haut).');
@@ -270,10 +310,16 @@ function LatexEditorInner({ path, initial, onDirtyChange }: { path: string; init
           size="sm"
           onClick={() => void compile()}
           disabled={busy || workflowMissing}
-          icon={busy ? <Spinner className="size-3.5 text-bg" /> : <Play />}
-          title={workflowMissing ? 'Installez le workflow de compilation' : 'Enregistrer et compiler sur GitHub (Ctrl+S)'}
+          icon={busy ? <Spinner className="size-3.5 text-on-brand" /> : <Play />}
+          title={
+            workflowMissing
+              ? 'Installez le workflow de compilation'
+              : fast
+                ? 'Enregistrer et compiler avec le service rapide (Ctrl+S) — modifiable dans les Paramètres'
+                : 'Enregistrer et compiler sur GitHub (Ctrl+S) — compilation rapide possible dans les Paramètres'
+          }
         >
-          {busy ? 'Compilation…' : 'Compiler'}
+          {busy ? 'Compilation…' : fast ? 'Compiler (rapide)' : 'Compiler'}
           {!busy && <span className="ml-1 hidden text-[11px] font-normal opacity-60 xl:inline">Ctrl S</span>}
         </Button>
       </ViewerHeader>

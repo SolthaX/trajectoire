@@ -407,6 +407,82 @@ export const filesApi = {
   },
 };
 
+// --- compilation rapide (service en ligne) ------------------------------------------
+
+/** Service de compilation LaTeX en ligne (TeX Live complet). Le dossier du .tex y est envoyé. */
+export const FAST_LATEX_URL = 'https://latex.ytotech.com/builds/sync';
+const TEXT_EXT = new Set(['.tex', '.cls', '.sty', '.bib', '.bst', '.bbx', '.cbx', '.lbx', '.def', '.cfg', '.txt', '.csv']);
+const MAX_UPLOAD = 15 * 1024 * 1024;
+
+function toB64(bytes: Uint8Array) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+export type FastCompileResult = { ok: true; seconds: number; log: string } | { ok: false; log: string };
+
+/**
+ * Compile `texPath` (contenu courant `content`) via le service en ligne, avec les fichiers de son dossier
+ * (images, .cls, .bib…). En cas de succès, enregistre le .tex, le PDF et le journal en un seul commit
+ * marqué [skip ci] (GitHub Actions ne recompile donc pas).
+ */
+export async function compileFast(texPath: string, content: string): Promise<FastCompileResult> {
+  const rel = cleanRel(texPath);
+  const dir = dirname(rel);
+  const pdfRel = rel.replace(/\.tex$/i, '.pdf');
+  const snap = await fetchSnapshot();
+  const resources: Record<string, unknown>[] = [{ path: basename(rel), main: true, content }];
+  let total = content.length;
+  for (const [p, info] of snap.files) {
+    if (p === rel || p === pdfRel || isHidden(p)) continue;
+    if (dir && !p.startsWith(`${dir}/`)) continue;
+    const local = dir ? p.slice(dir.length + 1) : p;
+    total += info.size;
+    if (total > MAX_UPLOAD) throw new FilesError(400, 'Dossier trop volumineux pour la compilation rapide (15 Mo max) : utilisez GitHub.');
+    const bytes = await readBlob(info.sha);
+    resources.push(TEXT_EXT.has(extname(p)) ? { path: local, content: new TextDecoder().decode(bytes) } : { path: local, file: toB64(bytes) });
+  }
+  const debut = Date.now();
+  let res: Response;
+  try {
+    res = await fetch(FAST_LATEX_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ compiler: 'xelatex', resources }),
+    });
+  } catch {
+    throw new FilesError(400, 'Service de compilation rapide injoignable : réessayez ou passez sur GitHub dans les Paramètres.');
+  }
+  const seconds = Math.round((Date.now() - debut) / 100) / 10;
+  const date = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  const type = res.headers.get('content-type') ?? '';
+  if (res.ok && type.includes('pdf')) {
+    const pdf = new Uint8Array(await res.arrayBuffer());
+    const log = `# Compilation réussie — ${repoPath(rel)} — ${date} UTC — ${seconds} s (compilation rapide)\n`;
+    const changes: Change[] = [
+      { path: repoPath(rel), content },
+      { path: repoPath(pdfRel), content: pdf },
+      { path: joinPath(LATEX_LOG_ROOT, latexLogPath(rel)), content: log },
+    ];
+    await commitAndSync(changes, `PDF compilé (rapide) : ${basename(rel)} [skip ci]`);
+    return { ok: true, seconds, log };
+  }
+  let detail = '';
+  try {
+    const body = (await res.json()) as { error?: string; log_files?: Record<string, string> };
+    const logs = Object.values(body.log_files ?? {}).join('\n');
+    // On ne garde que les lignes utiles (erreurs « ! » et « fichier:ligne: »).
+    const lines = logs.split('\n');
+    const useful = lines.filter((l, i) => /^!|^\S+\.tex:\d+:/.test(l) || (i > 0 && /^!/.test(lines[i - 1])));
+    detail = (useful.length ? useful.join('\n') : logs.slice(-4000)) || body.error || '';
+    detail = detail.replaceAll('__main_document__.tex', basename(rel));
+  } catch {
+    detail = `Réponse inattendue du service (HTTP ${res.status}).`;
+  }
+  return { ok: false, log: `# Compilation échec — ${repoPath(rel)} — ${date} UTC — ${seconds} s (compilation rapide)\n${detail}` };
+}
+
 /** Chemin du journal (relatif à .latex/) pour un .tex relatif à documents/. */
 export const latexLogPath = (texPath: string) => `${texPath.replace(/\.tex$/i, '')}.log`;
 

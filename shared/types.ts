@@ -166,6 +166,8 @@ export interface Profile {
 export interface Settings {
   profile: Profile;
   followup_days: number;
+  /** Moteur de compilation LaTeX : GitHub Actions (défaut) ou service en ligne rapide. */
+  latex_engine: 'github' | 'rapide';
 }
 
 export interface DashboardData {

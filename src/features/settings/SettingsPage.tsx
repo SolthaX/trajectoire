@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import type { Criterion } from '../../../shared/types';
 import { syncNow, useSyncStatus } from '../../backend/sync';
 import { Button, IconButton } from '../../components/ui/button';
-import { Field, FormGrid, Input, Textarea } from '../../components/ui/form';
+import { Field, FormGrid, Input, Segmented, Textarea } from '../../components/ui/form';
 import { useConfirm } from '../../components/ui/overlay';
 import { Card, CardHeader, PageHeader } from '../../components/ui/misc';
 import { api, errorMessage, refreshAll, useList, useRemove, useSave, useSaveSettings, useSettings } from '../../lib/api';
@@ -63,6 +63,46 @@ function ProfileCard() {
           </Button>
         </div>
       </form>
+    </Card>
+  );
+}
+
+function LatexEngineCard() {
+  const { data } = useSettings();
+  const save = useSaveSettings();
+  const engine = data?.latex_engine ?? 'github';
+  const choose = async (v: 'github' | 'rapide') => {
+    try {
+      await save.mutateAsync({ latex_engine: v });
+      toast.success(v === 'rapide' ? 'Compilation rapide activée' : 'Compilation par GitHub Actions');
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  };
+  return (
+    <Card>
+      <CardHeader title="Compilation LaTeX" subtitle="Comment le bouton « Compiler » des documents LaTeX produit le PDF." />
+      <div className="space-y-3">
+        <Segmented
+          value={engine}
+          onChange={(v) => void choose(v)}
+          options={[
+            { value: 'github', label: 'GitHub Actions (≈ 1 min)' },
+            { value: 'rapide', label: 'Rapide (≈ 2 s)' },
+          ]}
+        />
+        {engine === 'github' ? (
+          <p className="text-[12.5px] text-ink-3">
+            Le document est compilé dans votre dépôt privé par GitHub Actions. Rien ne sort de GitHub, mais il faut compter environ une minute.
+          </p>
+        ) : (
+          <p className="text-[12.5px] text-warning-ink">
+            Le .tex et les fichiers de son dossier (images, .cls, .bib…) sont envoyés à chaque compilation au service public{' '}
+            <span className="font-mono">latex.ytotech.com</span> (connexion chiffrée, sans engagement formel de confidentialité). Le PDF est
+            ensuite enregistré dans votre dépôt privé, comme avec GitHub.
+          </p>
+        )}
+      </div>
     </Card>
   );
 }
@@ -374,6 +414,7 @@ export function SettingsPage() {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-5">
           <GithubCard />
+          <LatexEngineCard />
           <ProfileCard />
           <BackupCard />
         </div>

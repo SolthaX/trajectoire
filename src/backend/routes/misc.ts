@@ -15,6 +15,7 @@ import { companies, contacts, interactions, interviews, jobs, projects } from '.
 const DEFAULT_SETTINGS: Settings = {
   profile: { first_name: '', last_name: '', email: '', phone: '', linkedin: '', signature: '' },
   followup_days: 7,
+  latex_engine: 'github',
 };
 
 export function readSettings(): Settings {
@@ -51,6 +52,7 @@ export const settingsRoutes = new Hono()
           .partial()
           .optional(),
         followup_days: z.number().int().min(1).max(90).optional(),
+        latex_engine: z.enum(['github', 'rapide']).optional(),
       })
       .parse(await c.req.json());
     const current = readSettings();
