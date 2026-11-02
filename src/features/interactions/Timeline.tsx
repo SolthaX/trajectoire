@@ -26,7 +26,7 @@ function Entry({ it, onEdit, showContact, showCompany }: { it: Interaction; onEd
       <span
         className={clsx(
           'relative z-[1] flex size-[27px] shrink-0 items-center justify-center rounded-full border',
-          planned ? 'border-dashed border-amber-400 bg-surface text-amber-600' : incoming ? 'border-accent/30 bg-accent-soft text-accent-ink' : 'border-line bg-surface text-ink-2',
+          planned ? 'border-dashed border-line-strong bg-surface text-warning-ink' : incoming ? 'border-accent/30 bg-accent-soft text-accent-ink' : 'border-line bg-surface text-ink-2',
         )}
       >
         <InteractionIcon type={it.type} className="size-3.5" />
@@ -40,7 +40,7 @@ function Entry({ it, onEdit, showContact, showCompany }: { it: Interaction; onEd
                 <ArrowDownLeft className="size-3" /> reçu
               </span>
             )}
-            {planned && <span className="ml-1.5 rounded bg-amber-100 px-1.5 py-px text-[11px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">à faire</span>}
+            {planned && <span className="ml-1.5 rounded bg-warning-soft px-1.5 py-px text-[11px] font-medium text-warning-ink">à faire</span>}
           </span>
           {showContact && it.contact_name && it.contact_id && (
             <button onClick={() => open(it.contact_id!)} className="text-ink-2 hover:text-accent-ink hover:underline">

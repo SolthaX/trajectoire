@@ -202,7 +202,7 @@ export function ScoreInput({ value, onChange, label }: { value: number | null | 
             className={clsx(
               'tabular flex size-7 items-center justify-center rounded-md border text-[12px] font-semibold transition-colors',
               active
-                ? 'border-accent bg-accent text-white'
+                ? 'border-accent bg-accent text-on-accent'
                 : 'border-line bg-surface text-ink-3 hover:border-line-strong hover:text-ink-2',
             )}
           >
