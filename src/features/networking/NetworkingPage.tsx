@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarPlus, Handshake, Plus, UsersRound } from 'lucide-react';
+import { CalendarArrowDown, CalendarPlus, Handshake, Plus, UsersRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { COMPANY_KINDS, EVENT_STATUSES, labelOf } from '../../../shared/constants';
@@ -11,6 +11,7 @@ import { EmptyState, Loading, PageHeader, Section } from '../../components/ui/mi
 import { useList } from '../../lib/api';
 import { daysFromToday, plural } from '../../lib/format';
 import { useLocalState, useNewParam } from '../../lib/hooks';
+import { downloadIcs, ICS_EXCLUDED_STATUSES } from '../../lib/ics';
 import { CompanyForm } from '../companies/CompanyForm';
 import { EventForm } from './EventForm';
 import { EventRow, isUpcoming } from './EventList';
@@ -122,9 +123,20 @@ export function NetworkingPage() {
         title="Networking"
         description="Vos réseaux, les événements à ne pas manquer et les personnes rencontrées."
         actions={
-          <Button variant="primary" icon={<CalendarPlus />} onClick={() => edit(null)}>
-            Nouvel événement
-          </Button>
+          <>
+            {data.length > 0 && (
+              <Button
+                icon={<CalendarArrowDown />}
+                title="Tous les événements sauf annulés et « pas allé », dans un fichier .ics à ouvrir avec Calendrier"
+                onClick={() => downloadIcs(data.filter((e) => !ICS_EXCLUDED_STATUSES.includes(e.status)), 'trajectoire-networking.ics')}
+              >
+                Exporter vers le calendrier
+              </Button>
+            )}
+            <Button variant="primary" icon={<CalendarPlus />} onClick={() => edit(null)}>
+              Nouvel événement
+            </Button>
+          </>
         }
       />
       {isLoading ? (

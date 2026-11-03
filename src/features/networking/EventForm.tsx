@@ -1,4 +1,4 @@
-import { Trash2, UserPlus, X } from 'lucide-react';
+import { CalendarArrowDown, Trash2, UserPlus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { EVENT_KINDS, EVENT_STATUSES } from '../../../shared/constants';
@@ -11,6 +11,7 @@ import { Avatar } from '../../components/ui/misc';
 import { errorMessage, useList, useRemove, useSave } from '../../lib/api';
 import { useFormState } from '../../lib/form';
 import { fullName } from '../../lib/format';
+import { downloadIcs, icsFilename } from '../../lib/ics';
 import { ContactForm } from '../contacts/ContactForm';
 
 const EMPTY = {
@@ -168,6 +169,11 @@ export function EventForm({
           {event && (
             <Button variant="danger-ghost" className="mr-auto" icon={<Trash2 />} onClick={del}>
               Supprimer
+            </Button>
+          )}
+          {event && (
+            <Button icon={<CalendarArrowDown />} onClick={() => downloadIcs([event], icsFilename(event.name))}>
+              Ajouter au calendrier
             </Button>
           )}
           <Button onClick={() => onOpenChange(false)}>Annuler</Button>
