@@ -7,6 +7,7 @@ import { router } from './App';
 import { initBackend } from './backend/app';
 import { refreshAll } from './lib/api';
 import { registerServiceWorker } from './lib/pwa';
+import { installZenLinks } from './lib/zen';
 import { ConfirmProvider } from './components/ui/overlay';
 import './styles.css';
 
@@ -15,6 +16,9 @@ const queryClient = new QueryClient({
     queries: { staleTime: 15_000, refetchOnWindowFocus: true, retry: 1 },
   },
 });
+
+// Liens externes dans Zen (si activé dans Paramètres, app installée uniquement).
+installZenLinks();
 
 // Démarre la base locale ; une synchro qui apporte des données rafraîchit l'interface.
 void initBackend(() => void refreshAll(queryClient));

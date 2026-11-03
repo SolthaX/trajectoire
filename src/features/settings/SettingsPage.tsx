@@ -12,6 +12,8 @@ import { api, errorMessage, refreshAll, useList, useRemove, useSave, useSaveSett
 import { useFormState } from '../../lib/form';
 import { fmtAgo } from '../../lib/format';
 import { checkRepo, setConfig, useGithubConfig } from '../../lib/github';
+import { isStandalone } from '../../lib/pwa';
+import { openInZen, setZenLinks, useZenLinks } from '../../lib/zen';
 
 function ProfileCard() {
   const { data } = useSettings();
@@ -101,6 +103,38 @@ function LatexEngineCard() {
             <span className="font-mono">latex.ytotech.com</span> (connexion chiffrée, sans engagement formel de confidentialité). Le PDF est
             ensuite enregistré dans votre dépôt privé, comme avec GitHub.
           </p>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function ZenLinksCard() {
+  const on = useZenLinks();
+  return (
+    <Card>
+      <CardHeader title="Liens externes" subtitle="Navigateur qui ouvre les liens (sites, LinkedIn, offres, visio…) depuis l'app installée." />
+      <div className="space-y-3">
+        <Segmented
+          value={on ? 'zen' : 'chrome'}
+          onChange={(v) => setZenLinks(v === 'zen')}
+          options={[
+            { value: 'chrome', label: 'Chrome' },
+            { value: 'zen', label: 'Zen' },
+          ]}
+        />
+        <p className="text-[12.5px] text-ink-3">
+          Réglage propre à cet appareil, appliqué seulement dans l'app installée. Zen demande d'avoir lancé une fois{' '}
+          <span className="font-mono">scripts/windows/installer-liens-zen.ps1</span> sous Windows. Au premier lien, Chrome demande « Ouvrir
+          Zen ? » : cochez « Toujours autoriser ». Les PDF des documents restent dans Chrome.
+        </p>
+        {on && (
+          <div className="flex items-center justify-between gap-3">
+            {!isStandalone() && <p className="text-[12.5px] text-warning-ink">Vous êtes dans un onglet : les liens restent ici.</p>}
+            <Button size="sm" className="ml-auto" onClick={() => openInZen('https://solthax.github.io/trajectoire/')}>
+              Tester
+            </Button>
+          </div>
         )}
       </div>
     </Card>
@@ -415,6 +449,7 @@ export function SettingsPage() {
         <div className="space-y-5">
           <GithubCard />
           <LatexEngineCard />
+          <ZenLinksCard />
           <ProfileCard />
           <BackupCard />
         </div>
