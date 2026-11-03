@@ -16,7 +16,7 @@ let db: {
 };
 
 /** Tables synchronisées, dans l'ordre des dépendances (parents d'abord). */
-export const TABLES = ['companies', 'contacts', 'projects', 'jobs', 'interviews', 'interactions', 'templates', 'criteria', 'settings'] as const;
+export const TABLES = ['companies', 'contacts', 'projects', 'jobs', 'interviews', 'interactions', 'events', 'templates', 'criteria', 'settings'] as const;
 export type TableName = (typeof TABLES)[number];
 
 const stamps = `created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT ''`;
@@ -34,6 +34,11 @@ const SCHEMA = `
     status TEXT NOT NULL DEFAULT 'a_explorer',
     priority TEXT NOT NULL DEFAULT 'moyenne',
     locations TEXT NOT NULL DEFAULT '[]',
+    -- entreprise / reseau (association, communauté) / ecole
+    kind TEXT NOT NULL DEFAULT 'entreprise',
+    -- « Mes réseaux » : j'en fais partie, avec quel rôle (ex. shifter)
+    member INTEGER NOT NULL DEFAULT 0,
+    my_role TEXT NOT NULL DEFAULT '',
     ${stamps}
   );
   CREATE TABLE projects (
@@ -65,6 +70,8 @@ const SCHEMA = `
     next_followup TEXT,
     source TEXT NOT NULL DEFAULT '',
     notes TEXT NOT NULL DEFAULT '',
+    -- Autres entreprises que company_id (l'entreprise principale) : [{ company_id, role }]
+    affiliations TEXT NOT NULL DEFAULT '[]',
     ${stamps}
   );
   CREATE TABLE jobs (
@@ -115,6 +122,25 @@ const SCHEMA = `
     subject TEXT NOT NULL DEFAULT '',
     content TEXT NOT NULL DEFAULT '',
     link TEXT NOT NULL DEFAULT '',
+    ${stamps}
+  );
+  -- Événements de networking (Shift Project, forum de l'X, petit déjeuner AX…).
+  CREATE TABLE events (
+    id INTEGER PRIMARY KEY,
+    organizer_id INTEGER REFERENCES companies(id) ON DELETE SET NULL,
+    name TEXT NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'afterwork',
+    starts_at TEXT NOT NULL,
+    ends_at TEXT,
+    place TEXT NOT NULL DEFAULT '',
+    link TEXT NOT NULL DEFAULT '',
+    url TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'repere',
+    preparation TEXT NOT NULL DEFAULT '',
+    debrief TEXT NOT NULL DEFAULT '',
+    next_steps TEXT NOT NULL DEFAULT '',
+    -- Contacts rencontrés : [{ contact_id, note }]
+    attendees TEXT NOT NULL DEFAULT '[]',
     ${stamps}
   );
   CREATE TABLE templates (
@@ -262,6 +288,7 @@ export function importSnapshot(s: Snapshot) {
         UPDATE interactions SET company_id = NULL WHERE company_id IS NOT NULL AND company_id NOT IN (SELECT id FROM companies);
         UPDATE interactions SET contact_id = NULL WHERE contact_id IS NOT NULL AND contact_id NOT IN (SELECT id FROM contacts);
         UPDATE interactions SET job_id = NULL WHERE job_id IS NOT NULL AND job_id NOT IN (SELECT id FROM jobs);
+        UPDATE events SET organizer_id = NULL WHERE organizer_id IS NOT NULL AND organizer_id NOT IN (SELECT id FROM companies);
       `);
     });
   } finally {

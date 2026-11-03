@@ -4,7 +4,7 @@
 import { Hono } from 'hono';
 import { ZodError } from 'zod';
 import { exportSnapshot, initDb, type Snapshot } from './db';
-import { companies, contacts, criteria, interactions, interviews, jobs, projects, templates } from './routes/entities';
+import { companies, contacts, criteria, events, interactions, interviews, jobs, projects, templates } from './routes/entities';
 import { backupRoutes, dashboardRoutes, searchRoutes, settingsRoutes } from './routes/misc';
 import { loadState, requestPersistence, saveState } from './store';
 import { configureSync, noteLocalChange, syncNow } from './sync';
@@ -26,6 +26,7 @@ app.route('/contacts', contacts.router);
 app.route('/jobs', jobs.router);
 app.route('/interviews', interviews.router);
 app.route('/interactions', interactions.router);
+app.route('/events', events.router);
 app.route('/templates', templates.router);
 app.route('/criteria', criteria.router);
 app.route('/settings', settingsRoutes);

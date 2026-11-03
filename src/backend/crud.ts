@@ -14,7 +14,10 @@ export interface CrudConfig {
   select?: string;
   alias?: string;
   order?: string;
-  /** Paramètres de requête autorisés → colonne qualifiée. */
+  /**
+   * Paramètres de requête autorisés → colonne qualifiée, ou expression SQL contenant des « ? »
+   * (chacun reçoit la valeur du paramètre ; « null » n'est alors pas géré).
+   */
   filters?: Record<string, string>;
   /** Ajuste les données avant écriture (création si `existing` absent). */
   prepare?: (data: Row, existing?: Row) => Row;
@@ -57,7 +60,10 @@ export function crud(cfg: CrudConfig) {
     for (const [param, col] of Object.entries(cfg.filters ?? {})) {
       const v = c.req.query(param);
       if (v === undefined || v === '') continue;
-      if (v === 'null') conds.push(`${col} IS NULL`);
+      if (col.includes('?')) {
+        conds.push(`(${col})`);
+        params.push(...Array.from({ length: col.split('?').length - 1 }, () => v));
+      } else if (v === 'null') conds.push(`${col} IS NULL`);
       else {
         conds.push(`${col} = ?`);
         params.push(v);

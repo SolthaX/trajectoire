@@ -35,8 +35,8 @@ export function ContactsPage() {
     (c) =>
       (!status || c.status === status) &&
       (!priority || c.priority === priority) &&
-      (!company || String(c.company_id) === company) &&
-      matches(q, c.first_name, c.last_name, c.email, c.role, c.company_name, c.notes),
+      (!company || String(c.company_id) === company || c.affiliations?.some((a) => String(a.company_id) === company)) &&
+      matches(q, c.first_name, c.last_name, c.email, c.role, c.company_name, c.notes, c.affiliations?.map((a) => `${a.company_name} ${a.role}`).join(' ')),
   );
 
   const columns: Column<Contact>[] = [
@@ -59,7 +59,14 @@ export function ContactsPage() {
       key: 'company',
       header: 'Entreprise',
       sort: (c) => c.company_name ?? null,
-      cell: (c) => <span className="truncate text-ink-2">{c.company_name ?? '—'}</span>,
+      cell: (c) => (
+        <span className="truncate text-ink-2" title={[c.company_name, ...(c.affiliations ?? []).map((a) => a.company_name)].filter(Boolean).join(', ')}>
+          {c.company_name ?? (c.affiliations?.[0]?.company_name || '—')}
+          {(c.affiliations?.length ?? 0) > (c.company_name ? 0 : 1) && (
+            <span className="ml-1 text-[12px] text-ink-3">+{(c.affiliations?.length ?? 0) - (c.company_name ? 0 : 1)}</span>
+          )}
+        </span>
+      ),
       className: 'max-w-[180px] truncate',
     },
     {

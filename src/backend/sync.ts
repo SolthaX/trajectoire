@@ -8,6 +8,13 @@ import { exportSnapshot, importSnapshot, now, TABLES, type Snapshot } from './db
 
 export const DATA_FILE = 'trajectoire.json';
 
+/**
+ * Version du schéma des données. Une version plus ancienne de l'app ne connaît pas les nouvelles
+ * tables / colonnes et les effacerait en poussant : elle refuse donc de synchroniser.
+ * 3 : événements de networking, entreprises secondaires des contacts, type d'entreprise.
+ */
+export const SCHEMA_VERSION = 3;
+
 // --- état observable ----------------------------------------------------------------
 export interface SyncStatus {
   state: 'off' | 'idle' | 'syncing' | 'error' | 'offline';
@@ -140,8 +147,11 @@ async function syncOnce(): Promise<boolean> {
   const entry = tree.entries.find((e) => e.path === DATA_FILE);
   let remote: Snapshot | null = null;
   if (entry) {
-    const parsed = JSON.parse(await readText(entry.sha)) as Partial<Snapshot> & { app?: string };
+    const parsed = JSON.parse(await readText(entry.sha)) as Partial<Snapshot> & { app?: string; schema?: number };
     if (parsed.app !== 'trajectoire') throw new Error(`${DATA_FILE} ne vient pas de Trajectoire.`);
+    if ((parsed.schema ?? 2) > SCHEMA_VERSION) {
+      throw new Error('Les données en ligne viennent d’une version plus récente de Trajectoire : rechargez la page pour mettre l’app à jour.');
+    }
     remote = { tables: parsed.tables ?? {}, tombstones: parsed.tombstones ?? [] };
   }
 
@@ -160,7 +170,7 @@ async function syncOnce(): Promise<boolean> {
   if (changeCounter !== startCounter) return false;
 
   const parent: Head | undefined = tree.commitSha && tree.treeSha ? { commitSha: tree.commitSha, treeSha: tree.treeSha } : undefined;
-  const body = JSON.stringify({ app: 'trajectoire', version: 2, updated_at: now(), ...final }, null, 1);
+  const body = JSON.stringify({ app: 'trajectoire', version: 2, schema: SCHEMA_VERSION, updated_at: now(), ...final }, null, 1);
   try {
     await commit([{ path: DATA_FILE, content: body }], 'Synchronisation des données', getConfig(), parent ? { parent } : {});
   } catch (e) {

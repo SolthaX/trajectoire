@@ -27,6 +27,31 @@ export const COMPANY_STATUSES = opts([
   { value: 'ecartee', label: 'Écartée', color: 'slate' },
 ] as const);
 
+export const COMPANY_KINDS = opts([
+  { value: 'entreprise', label: 'Entreprise' },
+  { value: 'reseau', label: 'Réseau / association' },
+  { value: 'ecole', label: 'École / alumni' },
+] as const);
+
+export const EVENT_KINDS = opts([
+  { value: 'afterwork', label: 'Afterwork / apéro' },
+  { value: 'conference', label: 'Conférence / table ronde' },
+  { value: 'atelier', label: 'Atelier' },
+  { value: 'forum', label: 'Forum / salon' },
+  { value: 'petit_dejeuner', label: 'Petit déjeuner' },
+  { value: 'diner', label: 'Déjeuner / dîner' },
+  { value: 'webinaire', label: 'Webinaire' },
+  { value: 'autre', label: 'Autre' },
+] as const);
+
+export const EVENT_STATUSES = opts([
+  { value: 'repere', label: 'Repéré', color: 'gray' },
+  { value: 'inscrit', label: 'Inscrit', color: 'blue' },
+  { value: 'participe', label: 'Participé', color: 'green' },
+  { value: 'pas_alle', label: 'Pas allé', color: 'slate' },
+  { value: 'annule', label: 'Annulé', color: 'slate' },
+] as const);
+
 export const PROJECT_STATUSES = opts([
   { value: 'a_venir', label: 'À venir', color: 'amber' },
   { value: 'en_cours', label: 'En cours', color: 'blue' },

@@ -18,10 +18,16 @@ export interface Company {
   status: string;
   priority: string;
   locations: Location[];
+  /** entreprise / reseau / ecole (voir COMPANY_KINDS). */
+  kind: string;
+  /** « Mes réseaux » : j'en fais partie. */
+  member: boolean;
+  my_role: string;
   created_at: string;
   updated_at: string;
   // calculés
   contacts_count?: number;
+  events_count?: number;
   jobs_count?: number;
   projects_count?: number;
   last_activity?: string | null;
@@ -66,10 +72,49 @@ export interface Contact {
   next_followup: string | null;
   source: string;
   notes: string;
+  /** Entreprises en plus de l'entreprise principale (company_id / role). */
+  affiliations: Affiliation[];
   created_at: string;
   updated_at: string;
   company_name?: string | null;
   last_interaction?: string | null;
+  /** Événements où la personne a été rencontrée (calculé). */
+  met_at?: { id: number; name: string; starts_at: string }[];
+}
+
+export interface Affiliation {
+  company_id: number;
+  role: string;
+  company_name?: string;
+}
+
+export interface Attendee {
+  contact_id: number;
+  note: string;
+  contact_name?: string;
+  contact_sub?: string;
+}
+
+export interface NetworkEvent {
+  id: number;
+  organizer_id: number | null;
+  name: string;
+  kind: string;
+  starts_at: string;
+  ends_at: string | null;
+  place: string;
+  /** Lien de visio. */
+  link: string;
+  /** Page de l'événement / inscription. */
+  url: string;
+  status: string;
+  preparation: string;
+  debrief: string;
+  next_steps: string;
+  attendees: Attendee[];
+  created_at: string;
+  updated_at: string;
+  organizer_name?: string | null;
 }
 
 export interface Job {
@@ -182,6 +227,7 @@ export interface DashboardData {
   };
   followups: (Contact & { overdue_days: number })[];
   upcoming_interviews: Interview[];
+  upcoming_events: NetworkEvent[];
   deadlines: Job[];
   to_apply: Job[];
   to_contact: Contact[];
@@ -194,7 +240,7 @@ export interface DashboardData {
 }
 
 export interface SearchResult {
-  type: 'company' | 'contact' | 'job' | 'file';
+  type: 'company' | 'contact' | 'job' | 'event' | 'file';
   id: string;
   title: string;
   subtitle: string;

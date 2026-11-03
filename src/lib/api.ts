@@ -6,6 +6,7 @@ import type {
   Interaction,
   Interview,
   Job,
+  NetworkEvent,
   Project,
   Settings,
   Template,
@@ -47,6 +48,7 @@ export interface ResourceMap {
   jobs: Job;
   interviews: Interview;
   interactions: Interaction;
+  events: NetworkEvent;
   templates: Template;
   criteria: Criterion;
 }

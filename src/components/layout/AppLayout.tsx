@@ -7,6 +7,7 @@ import {
   Send,
   Columns3,
   FolderOpen,
+  Handshake,
   LayoutDashboard,
   Mail,
   Menu as MenuIcon,
@@ -114,6 +115,7 @@ function Sidebar({ onSearch, onNavigate }: { onSearch: () => void; onNavigate?: 
             { to: '/offres', label: 'Offres', icon: <Briefcase />, color: 'text-sage' },
             { to: '/a-envoyer', label: 'À envoyer', icon: <Send />, color: 'text-saffron' },
             { to: '/entretiens', label: 'Entretiens', icon: <CalendarClock />, color: 'text-plum' },
+            { to: '/networking', label: 'Networking', icon: <Handshake />, color: 'text-coral' },
           ]}
         />
         <NavGroup

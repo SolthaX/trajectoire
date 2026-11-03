@@ -7,6 +7,7 @@ import {
   Columns3,
   FileText,
   FolderOpen,
+  Handshake,
   LayoutDashboard,
   Mail,
   Plus,
@@ -24,6 +25,7 @@ const ICONS: Record<SearchResult['type'], ReactNode> = {
   company: <Building2 />,
   contact: <UserRound />,
   job: <Briefcase />,
+  event: <Handshake />,
   file: <FileText />,
 };
 
@@ -31,6 +33,7 @@ const TYPE_LABEL: Record<SearchResult['type'], string> = {
   company: 'Entreprise',
   contact: 'Contact',
   job: 'Offre',
+  event: 'Événement',
   file: 'Fichier',
 };
 
@@ -78,6 +81,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
     if (r.type === 'company') go(`/entreprises/${r.id}`);
     else if (r.type === 'job') go(`/offres/${r.id}`);
     else if (r.type === 'contact') go(`/contacts?contact=${r.id}`);
+    else if (r.type === 'event') go(`/networking?event=${r.id}`);
     else go(`/documents?path=${encodeURIComponent(r.id)}`);
   };
 
@@ -98,7 +102,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       <Command.Input
         value={q}
         onValueChange={setQ}
-        placeholder="Rechercher une entreprise, un contact, une offre, un fichier…"
+        placeholder="Rechercher une entreprise, un contact, une offre, un événement, un fichier…"
         className="h-12 w-full border-b border-line bg-transparent px-4 text-[14px] text-ink outline-none placeholder:text-ink-3"
       />
       <Command.List className="max-h-[56vh] overflow-y-auto pb-2">
@@ -130,6 +134,9 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
               <Item value="new-interview" icon={<Plus />} onSelect={() => go('/entretiens?new=1')}>
                 Nouvel entretien
               </Item>
+              <Item value="new-event" icon={<Plus />} onSelect={() => go('/networking?new=1')}>
+                Nouvel événement
+              </Item>
             </Command.Group>
             <Command.Group heading="Aller à" className={groupClass}>
               <Item value="nav-home" icon={<LayoutDashboard />} onSelect={() => go('/')}>
@@ -149,6 +156,9 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
               </Item>
               <Item value="nav-interviews" icon={<CalendarClock />} onSelect={() => go('/entretiens')}>
                 Entretiens
+              </Item>
+              <Item value="nav-networking" icon={<Handshake />} onSelect={() => go('/networking')}>
+                Networking
               </Item>
               <Item value="nav-templates" icon={<Mail />} onSelect={() => go('/modeles')}>
                 Modèles de mails

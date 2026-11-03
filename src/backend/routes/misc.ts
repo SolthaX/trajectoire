@@ -9,7 +9,7 @@ import {
 import type { Settings } from '../../../shared/types';
 import { all, exportSnapshot, get, importSnapshot, now, run, today, type Snapshot } from '../db';
 import { getFileIndex } from '../fileIndex';
-import { companies, contacts, interactions, interviews, jobs, projects } from './entities';
+import { companies, contacts, events as networkEvents, interactions, interviews, jobs, projects } from './entities';
 
 // --- paramètres ----------------------------------------------------------------
 const DEFAULT_SETTINGS: Settings = {
@@ -160,6 +160,11 @@ export const dashboardRoutes = new Hono().get('/', (c) => {
     .slice(0, 6)
     .map((co) => ({ id: co.id, name: co.name, score: co.best_score, projects: co.projects_count }));
 
+  const upcoming_events = networkEvents
+    .list(`WHERE e.status IN ('repere', 'inscrit') AND substr(e.starts_at, 1, 10) >= ?`, [t])
+    .sort((a, b) => String(a.starts_at).localeCompare(String(b.starts_at)))
+    .slice(0, 8);
+
   const recent = interactions.list(`WHERE i.direction != 'prevu'`).slice(0, 8);
   const planned = interactions.list(`WHERE i.direction = 'prevu'`).reverse();
 
@@ -167,6 +172,7 @@ export const dashboardRoutes = new Hono().get('/', (c) => {
     kpis,
     followups,
     upcoming_interviews,
+    upcoming_events,
     deadlines,
     to_apply,
     to_contact,
@@ -199,7 +205,8 @@ export const searchRoutes = new Hono().get('/', (c) => {
     if (match(co.name, co.sector, co.locations)) out.push({ type: 'company', id: String(co.id), title: co.name, subtitle: co.sector });
   }
   for (const ct of contacts.list()) {
-    if (match(ct.first_name, ct.last_name, ct.email, ct.role, ct.company_name)) {
+    const others = (ct.affiliations ?? []).map((a: { company_name: string; role: string }) => `${a.company_name} ${a.role}`).join(' ');
+    if (match(ct.first_name, ct.last_name, ct.email, ct.role, ct.company_name, others)) {
       out.push({
         type: 'contact',
         id: String(ct.id),
@@ -211,6 +218,11 @@ export const searchRoutes = new Hono().get('/', (c) => {
   for (const j of jobs.list()) {
     if (match(j.title, j.company_name, j.location)) {
       out.push({ type: 'job', id: String(j.id), title: j.title, subtitle: [j.company_name, j.location].filter(Boolean).join(' · ') });
+    }
+  }
+  for (const ev of networkEvents.list()) {
+    if (match(ev.name, ev.organizer_name, ev.place)) {
+      out.push({ type: 'event', id: String(ev.id), title: ev.name, subtitle: [ev.organizer_name, ev.starts_at.slice(0, 10)].filter(Boolean).join(' · ') });
     }
   }
   for (const p of projects.list()) {

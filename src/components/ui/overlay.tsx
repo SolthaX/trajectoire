@@ -69,13 +69,17 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
           {onSubmit ? (
             <form
               className="flex min-h-0 flex-1 flex-col"
+              // stopPropagation : React propage les événements à travers les portails, un dialogue
+              // ouvert depuis un autre (ex. nouveau contact depuis un événement) ne doit pas valider le parent.
               onSubmit={(e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 onSubmit();
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                   e.preventDefault();
+                  e.stopPropagation();
                   onSubmit();
                 }
               }}

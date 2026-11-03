@@ -2,7 +2,7 @@ import { ArrowLeft, ExternalLink, Globe, MapPin, MoreHorizontal, Pencil, Plus, T
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
-import { COMPANY_STATUSES, CONTACT_STATUSES, JOB_STATUSES } from '../../../shared/constants';
+import { COMPANY_KINDS, COMPANY_STATUSES, CONTACT_STATUSES, JOB_STATUSES, labelOf } from '../../../shared/constants';
 import type { Project } from '../../../shared/types';
 import { LinkedinIcon, PriorityIcon, PrioritySelect, ScoreBadge, StatusBadge, StatusSelect } from '../../components/badges';
 import { Button, buttonClass, IconButton } from '../../components/ui/button';
@@ -15,11 +15,12 @@ import { ContactForm } from '../contacts/ContactForm';
 import { Timeline } from '../interactions/Timeline';
 import { InterviewList } from '../interviews/InterviewList';
 import { JobForm } from '../jobs/JobForm';
+import { EventList } from '../networking/EventList';
 import { CompanyForm } from './CompanyForm';
 import { ProjectCard } from './ProjectCard';
 import { ProjectForm } from './ProjectForm';
 
-type TabKey = 'projets' | 'contacts' | 'offres' | 'entretiens' | 'journal';
+type TabKey = 'projets' | 'contacts' | 'offres' | 'entretiens' | 'evenements' | 'journal';
 
 export function CompanyPage() {
   const id = Number(useParams().id);
@@ -31,6 +32,7 @@ export function CompanyPage() {
   const { data: jobs = [] } = useList('jobs', { company_id: id });
   const { data: interviews = [] } = useList('interviews', { company_id: id });
   const { data: interactions = [] } = useList('interactions', { company_id: id });
+  const { data: events = [] } = useList('events', { organizer_id: id });
   const { data: criteria = [] } = useList('criteria');
   const save = useSave('companies');
   const saveContact = useSave('contacts');
@@ -81,10 +83,18 @@ export function CompanyPage() {
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-[24px] leading-tight font-semibold tracking-[-0.015em] text-ink">{company.name}</h1>
-          <p className="mt-1 text-[13.5px] text-ink-3">{[company.sector, company.size].filter(Boolean).join(' · ') || 'Secteur non renseigné'}</p>
+          <p className="mt-1 text-[13.5px] text-ink-3">
+            {[company.kind && company.kind !== 'entreprise' ? labelOf(COMPANY_KINDS, company.kind) : '', company.sector, company.size].filter(Boolean).join(' · ') ||
+              'Secteur non renseigné'}
+          </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <StatusSelect options={COMPANY_STATUSES} value={company.status} onChange={(v) => patch({ status: v })} />
             <PrioritySelect value={company.priority} onChange={(v) => patch({ priority: v })} />
+            {company.member && (
+              <span className="inline-flex h-[30px] items-center rounded-md border border-coral/40 bg-coral-soft px-2.5 text-[12.5px] font-medium text-ink">
+                J'en fais partie{company.my_role && ` · ${company.my_role}`}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -123,6 +133,7 @@ export function CompanyPage() {
               { key: 'contacts', label: 'Contacts', count: contacts.length },
               { key: 'offres', label: 'Offres', count: jobs.length },
               { key: 'entretiens', label: 'Entretiens', count: interviews.length },
+              { key: 'evenements', label: 'Événements', count: events.length },
               { key: 'journal', label: 'Journal', count: interactions.length },
             ]}
           />
@@ -176,7 +187,10 @@ export function CompanyPage() {
                             <span className="truncate text-[13.5px] font-medium text-ink">{fullName(c)}</span>
                             <PriorityIcon value={c.priority} />
                           </div>
-                          <div className="truncate text-[12px] text-ink-3">{c.role || c.email.split('\n')[0] || '—'}</div>
+                          <div className="truncate text-[12px] text-ink-3">
+                            {(c.company_id === id ? c.role : c.affiliations?.find((a) => a.company_id === id)?.role) || c.email.split('\n')[0] || '—'}
+                            {c.company_id !== id && c.company_name && <span> · {c.company_name}</span>}
+                          </div>
                         </div>
                         {c.next_followup && (
                           <span className={overdue ? 'text-[12px] font-medium text-danger' : 'text-[12px] text-ink-3'}>
@@ -242,6 +256,7 @@ export function CompanyPage() {
           )}
 
           {tab === 'entretiens' && <InterviewList filter={{ company_id: id }} showCompany={false} />}
+          {tab === 'evenements' && <EventList organizerId={id} />}
           {tab === 'journal' && <Timeline filter={{ company_id: id }} />}
         </div>
 

@@ -168,17 +168,23 @@ export function ContactPicker({
   value,
   onChange,
   companyId,
+  exclude,
+  placeholder = 'Aucun contact',
 }: {
   id?: string;
   value: number | null | undefined;
   onChange: (id: number | null) => void;
   companyId?: number | null;
+  /** Contacts à ne pas proposer (déjà choisis). */
+  exclude?: number[];
+  placeholder?: string;
 }) {
   const { data = [] } = useList('contacts');
   const items = data
-    .filter((c) => !companyId || c.company_id === companyId || c.id === value)
+    .filter((c) => !companyId || c.company_id === companyId || c.affiliations?.some((a) => a.company_id === companyId) || c.id === value)
+    .filter((c) => !exclude?.includes(c.id))
     .map((c) => ({ id: c.id, label: fullName(c), sub: [c.role, c.company_name].filter(Boolean).join(' · ') || undefined }));
-  return <Combobox id={id} items={items} value={value} onChange={onChange} placeholder="Aucun contact" emptyLabel="Aucun contact" />;
+  return <Combobox id={id} items={items} value={value} onChange={onChange} placeholder={placeholder} emptyLabel="Aucun contact" />;
 }
 
 export function JobPicker({

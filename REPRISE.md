@@ -66,6 +66,11 @@ LaTeX par GitHub Actions (Tectonic). Tout a été testé contre un faux GitHub e
 - [x] Palette de couleurs personnalisée et étendue
 - [x] Compilation LaTeX rapide en option
 - [ ] Vérifier la compilation rapide sur le vrai dépôt
+- [x] Un contact lié à plusieurs entreprises, avec un rôle par lien (2026-11-03, non commité)
+- [x] Type d'entreprise (entreprise / réseau-association / école) : Shift Project Paris, AX, l'X… sont des
+      « entreprises » de type réseau
+- [x] Onglet Networking : événements (base, statut d'inscription, contacts rencontrés, préparation / bilan)
+- [x] Section « Mes réseaux » : mes appartenances et mon rôle (ex. shifter au Shift Project Paris)
 
 ## Prochaine étape proposée
 

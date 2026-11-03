@@ -1,7 +1,7 @@
 import { Building2, MapPin, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { COMPANY_STATUSES, PRIORITIES } from '../../../shared/constants';
+import { COMPANY_KINDS, COMPANY_STATUSES, labelOf, PRIORITIES } from '../../../shared/constants';
 import type { Company } from '../../../shared/types';
 import { PriorityIcon, ScoreBadge, StatusBadge } from '../../components/badges';
 import { DataTable, FilterBar, FilterSelect, matches, SearchInput, type Column } from '../../components/table';
@@ -22,6 +22,7 @@ export function CompaniesPage() {
   const [status, setStatus] = useLocalState('companies.status', '');
   const [priority, setPriority] = useLocalState('companies.priority', '');
   const [city, setCity] = useLocalState('companies.city', '');
+  const [kind, setKind] = useLocalState('companies.kind', '');
   useNewParam(() => setFormOpen(true));
 
   const cities = useMemo(() => {
@@ -34,6 +35,7 @@ export function CompaniesPage() {
     (c) =>
       (!status || c.status === status) &&
       (!priority || c.priority === priority) &&
+      (!kind || (c.kind || 'entreprise') === kind) &&
       (!city || c.locations?.some((l) => l.city.trim() === city)) &&
       matches(q, c.name, c.sector, c.description, c.locations?.map((l) => `${l.label} ${l.city}`).join(' ')),
   );
@@ -46,7 +48,13 @@ export function CompaniesPage() {
       cell: (c) => (
         <div className="min-w-0">
           <div className="truncate font-medium text-ink">{c.name}</div>
-          {c.sector && <div className="truncate text-[12px] text-ink-3">{c.sector}</div>}
+          {(c.sector || (c.kind && c.kind !== 'entreprise') || c.member) && (
+            <div className="truncate text-[12px] text-ink-3">
+              {[c.kind && c.kind !== 'entreprise' ? labelOf(COMPANY_KINDS, c.kind) : '', c.sector, c.member ? `j'en fais partie${c.my_role ? ` (${c.my_role})` : ''}` : '']
+                .filter(Boolean)
+                .join(' · ')}
+            </div>
+          )}
         </div>
       ),
       className: 'max-w-[260px]',
@@ -100,7 +108,7 @@ export function CompaniesPage() {
     <>
       <PageHeader
         title="Entreprises"
-        description="Les entreprises que vous ciblez, leurs projets et vos notes."
+        description="Les entreprises que vous ciblez, vos réseaux et écoles, leurs projets et vos notes."
         actions={
           <Button variant="primary" icon={<Plus />} onClick={() => setFormOpen(true)}>
             Nouvelle entreprise
@@ -124,6 +132,7 @@ export function CompaniesPage() {
         <>
           <FilterBar count={plural(rows.length, 'entreprise')}>
             <SearchInput value={q} onChange={setQ} placeholder="Nom, secteur, ville…" />
+            <FilterSelect value={kind} onChange={setKind} options={COMPANY_KINDS} allLabel="Tous les types" />
             <FilterSelect value={status} onChange={setStatus} options={COMPANY_STATUSES} allLabel="Tous les statuts" />
             <FilterSelect value={priority} onChange={setPriority} options={PRIORITIES} allLabel="Toutes priorités" />
             {cities.length > 0 && <FilterSelect value={city} onChange={setCity} options={cities} allLabel="Toutes les villes" />}

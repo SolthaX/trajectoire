@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Briefcase, CalendarPlus, Check, Copy, Mail, MoreHorizontal, Pencil, Phone, Trash2, X } from 'lucide-react';
+import { Briefcase, CalendarPlus, Check, Copy, Handshake, Mail, MoreHorizontal, Pencil, Phone, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -158,6 +158,14 @@ function ContactBody({ contact }: { contact: Contact }) {
               </>
             )}
           </p>
+          {contact.affiliations?.map((a) => (
+            <p key={a.company_id} className="truncate text-[12.5px] text-ink-3">
+              {a.role ? `${a.role} · ` : ''}
+              <Link to={`/entreprises/${a.company_id}`} className="text-ink-2 hover:text-accent-ink hover:underline" onClick={close}>
+                {a.company_name}
+              </Link>
+            </p>
+          ))}
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
             <StatusSelect options={CONTACT_STATUSES} value={contact.status} onChange={(v) => save.mutate({ id: contact.id, status: v })} />
             <PrioritySelect value={contact.priority} onChange={(v) => save.mutate({ id: contact.id, priority: v })} />
@@ -226,6 +234,26 @@ function ContactBody({ contact }: { contact: Contact }) {
         <Section title="Notes">
           <NotesEditor contact={contact} />
         </Section>
+
+        {!!contact.met_at?.length && (
+          <Section title="Rencontré à">
+            <ul className="space-y-1">
+              {contact.met_at.map((ev) => (
+                <li key={ev.id}>
+                  <Link
+                    to={`/networking?event=${ev.id}`}
+                    onClick={close}
+                    className="flex items-center gap-2.5 rounded-lg border border-line px-3 py-2 text-[13px] hover:border-line-strong"
+                  >
+                    <Handshake className="size-3.5 text-ink-3" />
+                    <span className="min-w-0 flex-1 truncate text-ink">{ev.name}</span>
+                    <span className="text-[12px] text-ink-3">{fmtDate(ev.starts_at, { year: true })}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
 
         {jobs.length > 0 && (
           <Section title="Offres liées">

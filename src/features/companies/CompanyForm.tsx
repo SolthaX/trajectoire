@@ -1,7 +1,7 @@
 import { MapPin, Plus, Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { COMPANY_STATUSES, PRIORITIES } from '../../../shared/constants';
+import { COMPANY_KINDS, COMPANY_STATUSES, PRIORITIES } from '../../../shared/constants';
 import type { Company, Location } from '../../../shared/types';
 import { Button, IconButton } from '../../components/ui/button';
 import { Field, FormGrid, Input, Select, Textarea } from '../../components/ui/form';
@@ -20,6 +20,9 @@ const EMPTY = {
   description: '',
   notes: '',
   locations: [] as Location[],
+  kind: 'entreprise',
+  member: false,
+  my_role: '',
 };
 
 export function CompanyForm({
@@ -27,11 +30,13 @@ export function CompanyForm({
   onOpenChange,
   company,
   onSaved,
+  defaults,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   company?: Company | null;
   onSaved?: (c: Company) => void;
+  defaults?: Partial<typeof EMPTY>;
 }) {
   const save = useSave('companies');
   const { values, set, bind, reset } = useFormState(EMPTY);
@@ -51,10 +56,14 @@ export function CompanyForm({
               description: company.description,
               notes: company.notes,
               locations: company.locations ?? [],
+              kind: company.kind || 'entreprise',
+              member: !!company.member,
+              my_role: company.my_role ?? '',
             }
-          : EMPTY,
+          : { ...EMPTY, ...defaults },
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, company, reset]);
 
   const setLoc = (i: number, patch: Partial<Location>) =>
@@ -69,6 +78,7 @@ export function CompanyForm({
         id: company?.id,
         ...values,
         locations: values.locations.filter((l) => l.label || l.city || l.address),
+        my_role: values.member ? values.my_role : '',
       });
       toast.success(company ? 'Entreprise mise à jour' : 'Entreprise ajoutée');
       onOpenChange(false);
@@ -96,14 +106,30 @@ export function CompanyForm({
     >
       <div className="space-y-5">
         <FormGrid>
-          <Field label="Nom *">{(id) => <Input id={id} {...bind('name')} placeholder="ex. Airbus" required />}</Field>
-          <Field label="Secteur">{(id) => <Input id={id} {...bind('sector')} placeholder="ex. Aéronautique" />}</Field>
+          <Field label="Nom *">{(id) => <Input id={id} {...bind('name')} placeholder="ex. Airbus, The Shift Project, AX…" required />}</Field>
+          <Field label="Type">{(id) => <Select id={id} {...bind('kind')} options={COMPANY_KINDS} />}</Field>
+          <Field label="Secteur">{(id) => <Input id={id} {...bind('sector')} placeholder="ex. Aéronautique, climat…" />}</Field>
           <Field label="Statut">{(id) => <Select id={id} {...bind('status')} options={COMPANY_STATUSES} />}</Field>
           <Field label="Priorité">{(id) => <Select id={id} {...bind('priority')} options={PRIORITIES} />}</Field>
           <Field label="Site web">{(id) => <Input id={id} {...bind('website')} placeholder="https://…" />}</Field>
           <Field label="Page LinkedIn">{(id) => <Input id={id} {...bind('linkedin')} placeholder="https://linkedin.com/company/…" />}</Field>
           <Field label="Taille / effectif">{(id) => <Input id={id} {...bind('size')} placeholder="ex. 5 000 salariés, ETI…" />}</Field>
         </FormGrid>
+
+        <div className="rounded-xl border border-line bg-surface-2/50 p-3">
+          <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-ink">
+            <input type="checkbox" checked={values.member} onChange={(e) => set('member', e.target.checked)} className="size-4 accent-[var(--accent)]" />
+            <span>
+              <span className="font-medium">J'en fais partie</span>
+              <span className="text-ink-3"> · apparaît dans « Mes réseaux » (onglet Networking)</span>
+            </span>
+          </label>
+          {values.member && (
+            <Field label="Mon rôle" className="mt-3">
+              {(id) => <Input id={id} {...bind('my_role')} placeholder="ex. Shifter (bénévole), membre, alumni X2015, ancien salarié…" />}
+            </Field>
+          )}
+        </div>
 
         <Field label="Description">
           {(id) => <Textarea id={id} {...bind('description')} placeholder="Activité, actualité, ce qui vous attire…" />}

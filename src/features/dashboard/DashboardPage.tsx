@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Circle,
   FolderOpen,
+  Handshake,
   Plus,
   Send,
   UserRound,
@@ -171,6 +172,22 @@ export function DashboardPage() {
       onClick: () => navigate(iv.job_id ? `/offres/${iv.job_id}` : '/entretiens'),
     }));
 
+  const events: TodoItem[] = data.upcoming_events
+    .filter((ev) => daysFromToday(ev.starts_at) <= 7)
+    .map((ev) => ({
+      key: `e${ev.id}`,
+      icon: <Handshake />,
+      tone: daysFromToday(ev.starts_at) === 0 ? 'warning' : 'normal',
+      title: (
+        <>
+          <span className="font-medium">{ev.name}</span>
+          {ev.organizer_name && <span className="text-ink-3"> · {ev.organizer_name}</span>}
+        </>
+      ),
+      meta: `${fmtDateTime(ev.starts_at)} · ${ev.status === 'inscrit' ? 'inscrit' : 'inscription à faire'}${ev.preparation ? '' : ' · préparation à faire'}`,
+      onClick: () => navigate(`/networking?event=${ev.id}`),
+    }));
+
   const planned: TodoItem[] = data.planned
     .filter((it) => daysFromToday(it.date) <= 7)
     .map((it) => ({
@@ -228,7 +245,7 @@ export function DashboardPage() {
     })),
   ];
 
-  const totalTodos = planned.length + followups.length + interviews.length + deadlines.length + priorities.length;
+  const totalTodos = planned.length + followups.length + interviews.length + events.length + deadlines.length + priorities.length;
   const statusRows = CONTACT_STATUSES.map((s) => ({
     key: s.value,
     label: s.label,
@@ -276,7 +293,7 @@ export function DashboardPage() {
 
       <div className="mb-6 grid gap-5 lg:grid-cols-12">
         <Card className="lg:col-span-7">
-          <CardHeader title="À faire" subtitle={totalTodos ? 'Messages et calls prévus, relances, entretiens et échéances des 7 prochains jours.' : undefined} />
+          <CardHeader title="À faire" subtitle={totalTodos ? 'Messages et calls prévus, relances, entretiens, événements et échéances des 7 prochains jours.' : undefined} />
           {totalTodos === 0 ? (
             <div className="flex flex-col items-center py-8 text-center">
               <CheckCircle2 className="mb-2 size-6 text-success" />
@@ -288,6 +305,7 @@ export function DashboardPage() {
               <TodoGroup title="Messages et calls prévus" items={planned} dot="bg-saffron" />
               <TodoGroup title="Relances" items={followups} dot="bg-coral" />
               <TodoGroup title="Entretiens" items={interviews} dot="bg-plum" />
+              <TodoGroup title="Événements" items={events} dot="bg-coral" />
               <TodoGroup title="Échéances" items={deadlines} dot="bg-maroon" />
               <TodoGroup title="Priorités hautes" items={priorities} dot="bg-sage" />
             </div>
