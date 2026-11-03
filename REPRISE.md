@@ -1,16 +1,16 @@
 # Reprise — Trajectoire (dashboard de recherche d'emploi)
 
-> Dernière mise à jour : 2026-11-02 18:42 · branche `main` · commit `5bfbf65` · en ligne : https://solthax.github.io/trajectoire/
+> Dernière mise à jour : 2026-11-03 14:21 · branche `main` · commit `9bf519a` · en ligne : https://solthax.github.io/trajectoire/
 > Fichier maintenu par `/end` (lu par `/start`). Aucune donnée sensible ici.
 
 ## Indicateurs
 
 | Indicateur | Valeur |
 |---|---|
-| Objectifs du jalon en cours | 7/8 (88 %) : reste le premier test réel avec le jeton · jalon « usage » : 4/5 |
-| Tests | Pas de suite dans le dépôt ; 26 vérifications navigateur (Playwright, hors dépôt) + 2026-11-02 : import d'instantané ancien format sans perte, compilation rapide testée depuis Chromium (PDF 0,8 s, erreurs extraites) |
+| Objectifs du jalon en cours | 7/8 (88 %) : reste le premier test réel avec le jeton · jalon « usage » : 9/10 |
+| Tests | Pas de suite dans le dépôt ; vérifications navigateur Playwright hors dépôt : 2026-11-03 networking 29/29 + export .ics 7/7 (relu par la bibliothèque `icalendar`) |
 | Lint / typecheck | `npm run typecheck` OK · `npm run build` OK |
-| Commits (total / depuis la dernière reprise) | 10 / 6 |
+| Commits (total / depuis la dernière reprise) | 13 / 3 |
 | Modifications non commitées | aucune |
 
 ## État actuel
@@ -23,20 +23,29 @@ LaTeX par GitHub Actions (Tectonic). Tout a été testé contre un faux GitHub e
 
 ## Fait lors de la dernière session
 
-- Contacts : plusieurs emails / téléphones (stockés une valeur par ligne dans `email` / `phone`, sans migration).
-- Échanges planifiés : sens `prevu` + colonne `link` (lien visio) dans `interactions` ; types WhatsApp et SMS ;
-  exclus des stats d'activité. Onglet **À envoyer** (`src/features/planned/PlannedPage.tsx`), bouton « Fait »,
-  « Copier le message » ; « Planifier un échange » remplace « Écrire un mail » sur la fiche contact ;
-  groupe « Messages et calls prévus » dans l'À faire du tableau de bord.
-- `importSnapshot` ignore les colonnes inconnues (un appareil pas à jour ne plante plus sur un instantané plus récent).
-- Palette : Alabaster, Tan, Light blue, Midnight blue, Maroon + Corail, Safran, Sauge, Prune (`src/styles.css`) ;
-  fond Light blue, barre latérale `.side` Midnight blue (Maroon en sombre), boutons primaires `bg-brand`.
-- Compilation LaTeX **rapide** en option (Paramètres › Compilation LaTeX) via latex.ytotech.com (`compileFast`
-  dans `src/lib/files.ts`) : ~2 s, commit `[skip ci]` ; GitHub Actions reste le défaut.
+- 2026-11-03, déployé (`140db78`, `9bf519a`) : la version en ligne contient bien les nouveautés.
+- Contacts multi-entreprises : `contacts.affiliations` (JSON `[{company_id, role}]`), en plus de l'entreprise
+  principale `company_id` / `role`. Filtre `?company_id=` et `contacts_count` incluent les secondaires
+  (`contactInCompany` dans `src/backend/routes/entities.ts`, via `json_each`). Le CRUD accepte désormais des
+  filtres en expression SQL avec `?` (`src/backend/crud.ts`).
+- Entreprises : `kind` (entreprise / reseau / ecole), `member` (j'en fais partie), `my_role` (ex. shifter).
+- Onglet **Networking** (`src/features/networking/`) : Mes réseaux, table `events` (organisateur, type, dates,
+  lieu, visio, page d'inscription, statut repéré / inscrit / participé / pas allé / annulé, préparation, bilan,
+  suites, `attendees` JSON `[{contact_id, note}]`). Contact créé sur place depuis l'événement, avec l'origine
+  « Rencontré à … ». « Rencontré à » sur la fiche contact, onglet Événements sur la page entreprise.
+  Les événements apparaissent dans l'À faire du tableau de bord et dans la recherche.
+- Export **.ics** (`src/lib/ics.ts`) : un bouton par événement, et un export groupé (sans les annulés ni les
+  « pas allé »). Repérés marqués « (repéré) », fin par défaut +2 h, UID stable.
+- Synchro : `SCHEMA_VERSION = 3` dans `trajectoire.json` ; une version plus ancienne de l'app refuse désormais
+  de pousser. Correctif : un dialogue ouvert depuis un autre ne valide plus le parent
+  (`stopPropagation` dans `src/components/ui/overlay.tsx`).
+- Fausse alerte « contacts disparus » : c'était un filtre mémorisé de la page Contacts.
 
 ## En cours
 
 - L'utilisateur a 4 contacts réels dans l'app : toute évolution doit préserver les données (instantané compatible).
+- Les versions de l'app antérieures à `140db78` n'ont pas le garde de schéma : si l'une d'elles reste ouverte
+  sur un appareil synchronisé, elle effacerait les événements et les affiliations. Recharger partout.
 - Compilation rapide non testée de bout en bout sur le vrai dépôt (commit PDF, `[skip ci]` respecté).
 - Publié par l'utilisateur via `./scripts/publier-github.sh` : Pages déployé, dépôt privé `trajectoire-donnees`
   initialisé, premier passage du workflow LaTeX réussi (1 min 13, PDF commité par le bot).
@@ -66,16 +75,18 @@ LaTeX par GitHub Actions (Tectonic). Tout a été testé contre un faux GitHub e
 - [x] Palette de couleurs personnalisée et étendue
 - [x] Compilation LaTeX rapide en option
 - [ ] Vérifier la compilation rapide sur le vrai dépôt
-- [x] Un contact lié à plusieurs entreprises, avec un rôle par lien (2026-11-03, non commité)
+- [x] Un contact lié à plusieurs entreprises, avec un rôle par lien
 - [x] Type d'entreprise (entreprise / réseau-association / école) : Shift Project Paris, AX, l'X… sont des
       « entreprises » de type réseau
 - [x] Onglet Networking : événements (base, statut d'inscription, contacts rencontrés, préparation / bilan)
 - [x] Section « Mes réseaux » : mes appartenances et mon rôle (ex. shifter au Shift Project Paris)
+- [x] Export des événements vers le calendrier (.ics) pour l'iPhone
 
 ## Prochaine étape proposée
 
-Connecter GitHub dans les Paramètres (si pas déjà fait), activer « Rapide » dans Paramètres › Compilation LaTeX,
-compiler le CV d'exemple et vérifier : PDF dans le dépôt, journal `.latex/`, aucune exécution Actions déclenchée.
+Saisir les vrais réseaux (Shift Project Paris, AX, l'X) et quelques événements, puis importer l'export .ics sur
+l'iPhone. Vérifier si un réimport met à jour ou duplique les événements. Ensuite, connecter GitHub
+(premier vrai test de synchro).
 
 ## Décisions prises
 
@@ -93,6 +104,13 @@ compiler le CV d'exemple et vérifier : PDF dans le dépôt, journal `.latex/`, 
 - 2026-11-02 : compilation via claucloverleaf écartée (MCP local, inaccessible depuis une page web) ; service
   latex.ytotech.com accepté par l'utilisateur **en option**, risques expliqués, GitHub par défaut. Revient sur
   la décision « service tiers écarté » ci-dessus pour ce seul usage optionnel.
+- 2026-11-03 : liens contact ↔ entreprises et participants d'événement en colonnes JSON (comme `locations`),
+  pas de table de liaison : pas de migration, fusion de synchro ligne à ligne inchangée ; références orphelines
+  filtrées à la lecture.
+- 2026-11-03 : réseaux et écoles = entreprises typées (`kind`), pas une entité séparée ; « Mes réseaux » = `member`.
+- 2026-11-03 : calendrier abonné (webcal) écarté : l'utilisateur refuse de publier un .ics à une adresse
+  publique (gist secret), donc l'export se fait uniquement par fichier .ics téléchargé. Synchro CalDAV iCloud
+  impossible sans serveur (CORS).
 - 2026-11-02 : chaque app de `solthax.github.io` a un id de manifeste absolu (`/trajectoire/`, `/JapaneseStudy/`),
   contrôlé au build pour Trajectoire. Sur l'origine partagée, chaque app ne touche qu'à ses propres caches et
   clés (`trajectoire-*` / `trajectoire:*`, `benkyo-*`).
@@ -105,3 +123,5 @@ compiler le CV d'exemple et vérifier : PDF dans le dépôt, journal `.latex/`, 
 - Idées non retenues : carte des localisations, statuts personnalisables.
 - `MailComposer.tsx` n'est plus accessible depuis la fiche contact : le supprimer si l'utilisateur confirme.
 - Contraste de la date du tableau de bord (gris sur Light blue) à revoir si gênant.
+- Réimport .ics sur iPhone : mise à jour par UID ou doublon ? Non vérifié.
+- Statut et priorité d'entreprise affichés aussi pour les réseaux et écoles : les masquer si l'utilisateur le souhaite.
