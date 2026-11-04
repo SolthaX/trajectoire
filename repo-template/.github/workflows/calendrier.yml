@@ -1,0 +1,51 @@
+# Met à jour le calendrier iCloud « Trajectoire » à partir de trajectoire.json.
+# Lancé par l'app (workflow_dispatch) une minute après une synchro qui a changé un élément du
+# calendrier : pas de passage à chaque push, pour ménager les minutes GitHub Actions du dépôt privé.
+# Secrets du dépôt : ICLOUD_USER (Apple ID) et ICLOUD_APP_PASSWORD (mot de passe d'application,
+# créé sur https://account.apple.com → Connexion et sécurité → Mots de passe d'app).
+# Sans ces secrets, le workflow ne fait rien.
+name: Calendrier iCloud
+
+on:
+  push:
+    paths:
+      - '.github/calendrier/**'
+      - '.github/workflows/calendrier.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Seul l'état le plus récent compte : une synchro plus récente annule celle en cours.
+concurrency:
+  group: calendrier-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  icloud:
+    name: Synchroniser le calendrier iCloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            trajectoire.json
+            .github/calendrier
+          sparse-checkout-cone-mode: false
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installer caldav
+        run: pip install --disable-pip-version-check -q caldav==1.6.0
+
+      - name: Synchroniser
+        env:
+          ICLOUD_USER: ${{ secrets.ICLOUD_USER }}
+          ICLOUD_APP_PASSWORD: ${{ secrets.ICLOUD_APP_PASSWORD }}
+          CALENDRIER_NOM: Trajectoire
+        run: python .github/calendrier/icloud.py

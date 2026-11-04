@@ -4,6 +4,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { commit, getConfig, getTree, GithubError, readText, type Head } from '../lib/github';
+import { scheduleCalendarUpdate } from './calendarSync';
 import { exportSnapshot, importSnapshot, now, TABLES, type Snapshot } from './db';
 
 export const DATA_FILE = 'trajectoire.json';
@@ -126,6 +127,7 @@ export function syncNow(): Promise<void> {
         if (await syncOnce()) break;
       }
       setStatus({ state: 'idle', lastSync: now(), error: null });
+      scheduleCalendarUpdate();
     } catch (e) {
       const offline = e instanceof GithubError && e.status === 0;
       setStatus({ state: offline ? 'offline' : 'error', error: e instanceof Error ? e.message : String(e) });

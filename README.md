@@ -57,6 +57,14 @@ fichiers). Vous profitez de l'historique Git de chaque version.
 [Tectonic](https://tectonic-typesetting.github.io/) et dépose le PDF à côté. Comptez 30 à 60 secondes ; l'éditeur
 affiche la progression puis l'aperçu, ou le journal d'erreurs. Votre CV ne quitte pas votre compte GitHub.
 
+### Calendrier Apple (iCloud)
+
+Une minute après une synchro qui modifie un événement de networking, un entretien, une relance ou un message /
+call prévu, l'app lance le workflow `calendrier.yml` du dépôt privé. Il met à jour un calendrier iCloud
+« Trajectoire » par CalDAV : création, modification et suppression, sans toucher aux autres événements. Il faut
+deux secrets dans le dépôt privé : `ICLOUD_USER` (Apple ID) et `ICLOUD_APP_PASSWORD` (mot de passe
+d'application). Le passage par GitHub est nécessaire : une page web ne peut pas appeler iCloud directement (CORS).
+
 ## Sauvegardes
 
 - Données : dans le navigateur et, si GitHub est connecté, dans le dépôt privé avec tout l'historique.
