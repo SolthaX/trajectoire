@@ -185,6 +185,58 @@ export const dashboardRoutes = new Hono().get('/', (c) => {
   });
 });
 
+// --- calendrier mensuel --------------------------------------------------------
+// Tout ce qui a une date, entre `from` et `to` (AAAA-MM-JJ, inclus) : événements de networking,
+// entretiens, relances, messages et calls prévus, échanges faits.
+export const calendarRoutes = new Hono().get('/', (c) => {
+  const from = c.req.query('from') ?? today();
+  const to = c.req.query('to') ?? from;
+  const range = [from, to];
+  const day = (col: string) => `substr(${col}, 1, 10) BETWEEN ? AND ?`;
+  const items: Record<string, unknown>[] = [];
+
+  for (const e of networkEvents.list(`WHERE ${day('e.starts_at')} AND e.status != 'annule'`, range))
+    items.push({ key: `e${e.id}`, kind: 'evenement', date: e.starts_at, title: e.name, sub: e.organizer_name ?? '', status: e.status, event_id: e.id });
+
+  for (const iv of interviews.list(`WHERE ${day('iv.scheduled_at')} AND iv.status != 'annule'`, range))
+    items.push({
+      key: `i${iv.id}`,
+      kind: 'entretien',
+      date: iv.scheduled_at,
+      title: iv.company_name ?? iv.job_title ?? 'Entretien',
+      sub: iv.job_title && iv.company_name ? iv.job_title : '',
+      detail: iv.kind,
+      status: iv.status,
+      job_id: iv.job_id,
+    });
+
+  for (const ct of contacts.list(`WHERE ${day('c.next_followup')} AND c.status NOT IN (${inList(CLOSED_CONTACT_STATUSES)})`, range))
+    items.push({
+      key: `f${ct.id}`,
+      kind: 'relance',
+      date: ct.next_followup,
+      title: [ct.first_name, ct.last_name].filter(Boolean).join(' ') || 'Contact',
+      sub: ct.company_name ?? '',
+      contact_id: ct.id,
+    });
+
+  for (const it of interactions.list(`WHERE ${day('i.date')} AND i.type != 'note'`, range))
+    items.push({
+      key: `m${it.id}`,
+      kind: it.direction === 'prevu' ? 'prevu' : 'echange',
+      date: it.date,
+      title: it.contact_name || it.company_name || it.subject || '—',
+      sub: it.subject && (it.contact_name || it.company_name) ? it.subject : '',
+      detail: it.type,
+      status: it.direction,
+      contact_id: it.contact_id,
+      company_id: it.company_id,
+    });
+
+  items.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  return c.json(items);
+});
+
 // --- recherche globale ---------------------------------------------------------
 const norm = (s: unknown) =>
   String(s ?? '')

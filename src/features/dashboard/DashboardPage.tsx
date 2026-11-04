@@ -27,6 +27,7 @@ import { api, useSettings } from '../../lib/api';
 import { daysFromToday, fmtAgo, fmtDateTime, fmtPercent, fmtRelativeDay, fullName } from '../../lib/format';
 import { useContactSheet } from '../../lib/hooks';
 import { InteractionIcon } from '../interactions/InteractionIcon';
+import { CalendarCard } from './CalendarCard';
 import { BarList, Funnel, WeeklyColumns } from './charts';
 
 const TONES = {
@@ -305,45 +306,49 @@ export function DashboardPage() {
               <TodoGroup title="Messages et calls prévus" items={planned} dot="bg-saffron" />
               <TodoGroup title="Relances" items={followups} dot="bg-coral" />
               <TodoGroup title="Entretiens" items={interviews} dot="bg-plum" />
-              <TodoGroup title="Événements" items={events} dot="bg-coral" />
+              <TodoGroup title="Événements" items={events} dot="bg-sky" />
               <TodoGroup title="Échéances" items={deadlines} dot="bg-maroon" />
               <TodoGroup title="Priorités hautes" items={priorities} dot="bg-sage" />
             </div>
           )}
         </Card>
 
-        <div className="space-y-5 lg:col-span-5">
-          <Card>
-            <CardHeader title="Activité" subtitle="Échanges et candidatures, par semaine (12 semaines)" />
-            <WeeklyColumns data={data.weekly} />
-          </Card>
-          <Card>
-            <CardHeader
-              title="Projets les mieux notés"
-              subtitle="Meilleur score par entreprise"
-              actions={
-                <Link to="/entreprises" className="text-[12px] text-ink-3 hover:text-ink">
-                  Tout voir
-                </Link>
-              }
-            />
-            {data.top_companies.length === 0 ? (
-              <p className="text-[12.5px] text-ink-3">Notez les projets de vos entreprises selon vos critères pour les comparer ici.</p>
-            ) : (
-              <ul className="-mx-2">
-                {data.top_companies.map((c, i) => (
-                  <li key={c.id}>
-                    <Link to={`/entreprises/${c.id}`} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-2/80">
-                      <span className="tabular w-4 text-[12px] text-ink-3">{i + 1}</span>
-                      <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">{c.name}</span>
-                      <ScoreBadge score={c.score} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+        <div className="lg:col-span-5">
+          <CalendarCard />
         </div>
+      </div>
+
+      <div className="mb-6 grid gap-5 lg:grid-cols-2">
+        <Card>
+          <CardHeader title="Activité" subtitle="Échanges et candidatures, par semaine (12 semaines)" />
+          <WeeklyColumns data={data.weekly} />
+        </Card>
+        <Card>
+          <CardHeader
+            title="Projets les mieux notés"
+            subtitle="Meilleur score par entreprise"
+            actions={
+              <Link to="/entreprises" className="text-[12px] text-ink-3 hover:text-ink">
+                Tout voir
+              </Link>
+            }
+          />
+          {data.top_companies.length === 0 ? (
+            <p className="text-[12.5px] text-ink-3">Notez les projets de vos entreprises selon vos critères pour les comparer ici.</p>
+          ) : (
+            <ul className="-mx-2">
+              {data.top_companies.map((c, i) => (
+                <li key={c.id}>
+                  <Link to={`/entreprises/${c.id}`} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-2/80">
+                    <span className="tabular w-4 text-[12px] text-ink-3">{i + 1}</span>
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">{c.name}</span>
+                    <ScoreBadge score={c.score} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
       </div>
 
       <div className="mb-6 grid gap-5 lg:grid-cols-3">

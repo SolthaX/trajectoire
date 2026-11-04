@@ -239,6 +239,22 @@ export interface DashboardData {
   planned: Interaction[];
 }
 
+export type CalendarKind = 'evenement' | 'entretien' | 'relance' | 'prevu' | 'echange';
+
+export interface CalendarItem {
+  key: string;
+  kind: CalendarKind;
+  date: string; // AAAA-MM-JJ ou AAAA-MM-JJTHH:MM
+  title: string;
+  sub: string;
+  detail?: string; // type d'entretien ou d'échange
+  status?: string;
+  contact_id?: number | null;
+  company_id?: number | null;
+  job_id?: number | null;
+  event_id?: number;
+}
+
 export interface SearchResult {
   type: 'company' | 'contact' | 'job' | 'event' | 'file';
   id: string;

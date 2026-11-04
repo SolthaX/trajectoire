@@ -5,7 +5,7 @@ import { Hono } from 'hono';
 import { ZodError } from 'zod';
 import { exportSnapshot, initDb, type Snapshot } from './db';
 import { companies, contacts, criteria, events, interactions, interviews, jobs, projects, templates } from './routes/entities';
-import { backupRoutes, dashboardRoutes, searchRoutes, settingsRoutes } from './routes/misc';
+import { backupRoutes, calendarRoutes, dashboardRoutes, searchRoutes, settingsRoutes } from './routes/misc';
 import { loadState, requestPersistence, saveState } from './store';
 import { configureSync, noteLocalChange, syncNow } from './sync';
 
@@ -31,6 +31,7 @@ app.route('/templates', templates.router);
 app.route('/criteria', criteria.router);
 app.route('/settings', settingsRoutes);
 app.route('/dashboard', dashboardRoutes);
+app.route('/calendar', calendarRoutes);
 app.route('/search', searchRoutes);
 app.route('/backup', backupRoutes);
 app.all('*', (c) => c.json({ error: 'Route inconnue' }, 404));
