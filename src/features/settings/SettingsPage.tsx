@@ -1,8 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowUp, CheckCircle2, Download, Plus, RefreshCw, Trash2, Upload } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowDown, ArrowUp, CalendarDays, CheckCircle2, Copy, Download, ExternalLink, Plus, RefreshCw, Trash2, Upload, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { Criterion } from '../../../shared/types';
+import { installCalendarWorkflow, lastCalendarRun, runCalendarNow } from '../../backend/calendarSync';
 import { syncNow, useSyncStatus } from '../../backend/sync';
 import { Button, IconButton } from '../../components/ui/button';
 import { Field, FormGrid, Input, Segmented, Textarea } from '../../components/ui/form';
@@ -13,6 +15,7 @@ import { useFormState } from '../../lib/form';
 import { fmtAgo } from '../../lib/format';
 import { checkRepo, setConfig, useGithubConfig } from '../../lib/github';
 import { isStandalone } from '../../lib/pwa';
+import { PhoneCard } from './PhoneCard';
 import { openInZen, setZenLinks, useZenLinks } from '../../lib/zen';
 
 function ProfileCard() {
@@ -137,6 +140,174 @@ function ZenLinksCard() {
           </div>
         )}
       </div>
+    </Card>
+  );
+}
+
+function CopyName({ value }: { value: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() => void navigator.clipboard?.writeText(value).then(() => toast.success(`« ${value} » copié`))}
+      className="inline-flex items-center gap-1 rounded bg-surface-2 px-1.5 font-mono text-[12px] text-ink hover:bg-surface-3"
+      title="Copier"
+    >
+      {value} <Copy className="size-3 text-ink-3" />
+    </button>
+  );
+}
+
+function CalendarSyncCard() {
+  const cfg = useGithubConfig();
+  const { data: settings } = useSettings();
+  const save = useSaveSettings();
+  const [busy, setBusy] = useState(false);
+  const on = settings?.calendar_sync ?? false;
+  const run = useQuery({
+    queryKey: ['calendar-run', cfg?.owner, cfg?.repo],
+    queryFn: lastCalendarRun,
+    enabled: !!cfg,
+    refetchInterval: (q) => (q.state.data && q.state.data !== 'absent' && q.state.data.status !== 'completed' ? 5000 : false),
+  });
+  const r = run.data;
+
+  const toggle = async (v: boolean) => {
+    try {
+      await save.mutateAsync({ calendar_sync: v });
+      toast.success(v ? 'Synchro du calendrier activée' : 'Synchro du calendrier désactivée');
+    } catch (e) {
+      toast.error(errorMessage(e));
+    }
+  };
+  const act = async (fn: () => Promise<unknown>, ok: string) => {
+    setBusy(true);
+    try {
+      await fn();
+      toast.success(ok);
+      setTimeout(() => void run.refetch(), 4000);
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const repoUrl = cfg ? `https://github.com/${cfg.owner}/${cfg.repo}` : '';
+  const link = 'text-accent-ink hover:underline';
+
+  return (
+    <Card>
+      <div id="calendrier" className="scroll-mt-6" />
+      <CardHeader
+        title="Calendrier Apple (iCloud)"
+        subtitle="Vos événements de networking, entretiens, relances et messages prévus dans un calendrier « Trajectoire », sur l'iPhone et le Mac."
+      />
+      {!cfg ? (
+        <p className="text-[12.5px] text-ink-3">Connectez d'abord la synchronisation GitHub ci-dessus : c'est GitHub Actions qui met à jour iCloud.</p>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <Segmented
+              value={on ? 'on' : 'off'}
+              onChange={(v) => void toggle(v === 'on')}
+              options={[
+                { value: 'off', label: 'Désactivée' },
+                { value: 'on', label: 'Activée' },
+              ]}
+            />
+            <Button size="sm" icon={<RefreshCw />} disabled={busy || r === 'absent'} onClick={() => act(runCalendarNow, 'Mise à jour du calendrier lancée')}>
+              Mettre à jour maintenant
+            </Button>
+          </div>
+
+          <div className="text-[12.5px]">
+            {run.isLoading ? (
+              <span className="text-ink-3">Vérification du workflow…</span>
+            ) : run.isError ? (
+              <span className="text-ink-3">État inconnu : {errorMessage(run.error)}</span>
+            ) : r === 'absent' ? (
+              <span className="flex flex-wrap items-center gap-2 text-warning-ink">
+                Le workflow n'est pas encore dans le dépôt.
+                <Button size="sm" disabled={busy} onClick={() => act(installCalendarWorkflow, 'Workflow du calendrier installé')}>
+                  L'installer
+                </Button>
+              </span>
+            ) : !r ? (
+              <span className="text-ink-3">Jamais lancé.</span>
+            ) : (
+              <a href={r.html_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 hover:underline">
+                {r.status !== 'completed' ? (
+                  <RefreshCw className="size-3.5 animate-spin text-ink-3" />
+                ) : r.conclusion === 'success' ? (
+                  <CheckCircle2 className="size-3.5 text-success" />
+                ) : (
+                  <XCircle className="size-3.5 text-danger" />
+                )}
+                <span className={r.status === 'completed' && r.conclusion !== 'success' ? 'text-danger' : 'text-ink-2'}>
+                  {r.status !== 'completed'
+                    ? 'Mise à jour en cours…'
+                    : r.conclusion === 'success'
+                      ? `Dernière mise à jour réussie ${fmtAgo(r.created_at)}`
+                      : `Dernière mise à jour en échec ${fmtAgo(r.created_at)} : voir le journal`}
+                </span>
+                <ExternalLink className="size-3 text-ink-3" />
+              </a>
+            )}
+          </div>
+
+          <details className="group rounded-lg border border-line bg-surface-2/50 px-3 py-2" open={!on}>
+            <summary className="cursor-pointer text-[13px] font-medium text-ink">Mise en place (une seule fois, 5 minutes)</summary>
+            <ol className="mt-2 list-decimal space-y-2.5 pl-5 text-[13px] text-ink-2">
+              <li>
+                <strong>Mot de passe d'application Apple.</strong> Sur{' '}
+                <a href="https://account.apple.com" target="_blank" rel="noreferrer" className={link}>
+                  account.apple.com
+                </a>{' '}
+                → Connexion et sécurité → <em>Mots de passe d'app</em> → « + », nommé par exemple « Trajectoire ». Notez le mot de passe affiché
+                (format <span className="font-mono">xxxx-xxxx-xxxx-xxxx</span>) : il ne sera plus montré. Il donne accès à iCloud (calendriers,
+                contacts, mails) mais pas à votre compte Apple, et se révoque au même endroit.
+              </li>
+              <li>
+                <strong>Deux secrets dans le dépôt privé.</strong> Ouvrez{' '}
+                <a href={`${repoUrl}/settings/secrets/actions/new`} target="_blank" rel="noreferrer" className={link}>
+                  Settings → Secrets → New repository secret
+                </a>{' '}
+                et créez :
+                <ul className="mt-1.5 space-y-1">
+                  <li>
+                    <CopyName value="ICLOUD_USER" /> : votre Apple ID (adresse e-mail) ;
+                  </li>
+                  <li>
+                    <CopyName value="ICLOUD_APP_PASSWORD" /> : le mot de passe de l'étape 1.
+                  </li>
+                </ul>
+                <span className="mt-1 block text-[12px] text-ink-3">Les secrets ne sont lisibles par personne, pas même par l'app : seul le workflow les utilise.</span>
+              </li>
+              <li>
+                <strong>Droits du jeton.</strong> Le jeton GitHub de l'app doit avoir <em>Actions : Read and write</em> (c'est le cas si vous avez suivi la
+                procédure de connexion). Pour installer le workflow depuis l'app, il faut aussi <em>Workflows : Read and write</em>.
+              </li>
+              <li>
+                <strong>Activer</strong> ci-dessus, puis <em>Mettre à jour maintenant</em>. Le premier passage crée le calendrier « Trajectoire »
+                dans iCloud (environ 30 secondes). L'état ci-dessus doit passer à « réussie ».
+              </li>
+              <li>
+                <strong>Sur l'iPhone :</strong> Réglages → [votre nom] → iCloud → <em>Calendriers</em> activé. Dans l'app Calendrier → <em>Calendriers</em>,
+                cochez « Trajectoire ». Sur le Mac : Calendrier → Réglages → Comptes → iCloud.
+              </li>
+            </ol>
+          </details>
+
+          <ul className="space-y-1 text-[12.5px] text-ink-3">
+            <li>
+              <CalendarDays className="mr-1 inline size-3.5" />
+              Mise à jour automatique environ une minute après une modification synchronisée, seulement si un élément du calendrier a changé.
+            </li>
+            <li>Modifiez les éléments dans Trajectoire, pas dans Calendrier : la mise à jour suivante rétablirait la version de l'app.</li>
+            <li>Vos autres calendriers et les événements ajoutés à la main dans « Trajectoire » ne sont jamais touchés.</li>
+          </ul>
+        </div>
+      )}
     </Card>
   );
 }
@@ -442,12 +613,17 @@ function BackupCard() {
 }
 
 export function SettingsPage() {
+  // Sur téléphone, on commence par la connexion par QR code (pas de jeton à retaper).
+  const onPhone = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
   return (
     <>
-      <PageHeader title="Paramètres" description="Synchronisation, profil, critères de notation et sauvegarde." />
+      <PageHeader title="Paramètres" description="Synchronisation, iPhone, calendrier, profil, critères de notation et sauvegarde." />
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-5">
+          {onPhone && <PhoneCard />}
           <GithubCard />
+          {!onPhone && <PhoneCard />}
+          <CalendarSyncCard />
           <LatexEngineCard />
           <ZenLinksCard />
           <ProfileCard />

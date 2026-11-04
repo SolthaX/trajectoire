@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: Settings = {
   profile: { first_name: '', last_name: '', email: '', phone: '', linkedin: '', signature: '' },
   followup_days: 7,
   latex_engine: 'github',
+  calendar_sync: false,
 };
 
 export function readSettings(): Settings {
@@ -53,6 +54,7 @@ export const settingsRoutes = new Hono()
           .optional(),
         followup_days: z.number().int().min(1).max(90).optional(),
         latex_engine: z.enum(['github', 'rapide']).optional(),
+        calendar_sync: z.boolean().optional(),
       })
       .parse(await c.req.json());
     const current = readSettings();

@@ -8,23 +8,59 @@ import { fmtAgo } from '../../lib/format';
 import { useGithubConfig } from '../../lib/github';
 import { useInstallPrompt } from '../../lib/pwa';
 
+/**
+ * Resynchronise au retour sur l'app et toutes les 5 minutes. Monté une fois dans la mise en page :
+ * sur téléphone, la barre latérale (et donc SyncIndicator) n'est affichée qu'à l'ouverture du menu.
+ */
+export function useAutoSync() {
+  useEffect(() => {
+    const periodic = setInterval(() => document.visibilityState === 'visible' && scheduleSync(0), 5 * 60_000);
+    const onFocus = () => scheduleSync(300);
+    // iPhone (app sur l'écran d'accueil) : pas toujours d'événement « focus » au retour, mais « visibilitychange ».
+    const onVisible = () => document.visibilityState === 'visible' && scheduleSync(300);
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(periodic);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
+}
+
+/** Pastille d'état de la synchro (barre du haut sur téléphone). Clic = synchroniser maintenant. */
+export function SyncDot() {
+  const cfg = useGithubConfig();
+  const status = useSyncStatus();
+  if (!cfg) {
+    return (
+      <Link to="/parametres#github" className="rounded-md p-1.5 text-ink-3 hover:bg-surface-2" aria-label="Données sur cet appareil : synchroniser">
+        <CloudOff className="size-5" />
+      </Link>
+    );
+  }
+  const Icon = status.state === 'syncing' ? RefreshCw : status.state === 'error' ? AlertTriangle : status.state === 'offline' ? CloudOff : Cloud;
+  return (
+    <button
+      onClick={() => void syncNow()}
+      aria-label={status.error ?? 'Synchroniser maintenant'}
+      className={clsx('rounded-md p-1.5 hover:bg-surface-2', status.state === 'error' ? 'text-danger' : 'text-ink-3')}
+    >
+      <Icon className={clsx('size-5', status.state === 'syncing' && 'animate-spin')} />
+    </button>
+  );
+}
+
 /** État de la synchro GitHub, en bas de la barre latérale. Clic = synchroniser maintenant. */
 export function SyncIndicator() {
   const cfg = useGithubConfig();
   const status = useSyncStatus();
   const [, tick] = useState(0);
 
-  // Rafraîchit « il y a 2 min » et resynchronise au retour sur la fenêtre.
+  // Rafraîchit « il y a 2 min ».
   useEffect(() => {
     const t = setInterval(() => tick((n) => n + 1), 30_000);
-    const periodic = setInterval(() => document.visibilityState === 'visible' && scheduleSync(0), 5 * 60_000);
-    const onFocus = () => scheduleSync(300);
-    window.addEventListener('focus', onFocus);
-    return () => {
-      clearInterval(t);
-      clearInterval(periodic);
-      window.removeEventListener('focus', onFocus);
-    };
+    return () => clearInterval(t);
   }, []);
 
   if (!cfg) {

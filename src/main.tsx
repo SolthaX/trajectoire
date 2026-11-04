@@ -39,6 +39,8 @@ createRoot(document.getElementById('root')!).render(
       </ConfirmProvider>
       <Toaster
         position="bottom-right"
+        // Téléphone : au-dessus de la barre d'onglets.
+        mobileOffset={{ bottom: 'calc(env(safe-area-inset-bottom) + 68px)' }}
         toastOptions={{
           className: '!rounded-xl !border-line !bg-surface !text-ink !shadow-md !text-[13px] !font-sans',
         }}

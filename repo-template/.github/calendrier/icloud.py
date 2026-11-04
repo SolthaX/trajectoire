@@ -210,6 +210,10 @@ def main() -> int:
     user = os.environ.get("ICLOUD_USER", "").strip()
     password = os.environ.get("ICLOUD_APP_PASSWORD", "").strip()
     if not user or not password:
+        if os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch":
+            # Lancé par l'app (synchro activée dans Paramètres) : il manque la configuration.
+            print("::error::Secrets ICLOUD_USER / ICLOUD_APP_PASSWORD absents : ajoutez-les dans Settings → Secrets and variables → Actions.")
+            return 1
         print("::notice::Secrets ICLOUD_USER / ICLOUD_APP_PASSWORD absents : synchro du calendrier ignorée.")
         return 0
     source = Path(os.environ.get("DONNEES", "trajectoire.json"))

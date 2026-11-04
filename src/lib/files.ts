@@ -501,6 +501,11 @@ export async function writeRepoFile(path: string, content: string, message: stri
   return commitAndSync([{ path, content }], message);
 }
 
+/** Ajoute (ou remplace) plusieurs fichiers hors du dossier documents/, en un commit. */
+export async function writeRepoFiles(files: { path: string; content: string }[], message: string) {
+  return commitAndSync(files, message);
+}
+
 export async function downloadFile(path: string) {
   const bytes = await filesApi.bytes(path);
   const url = URL.createObjectURL(new Blob([bytes as Uint8Array<ArrayBuffer>], { type: mimeOf(path) }));

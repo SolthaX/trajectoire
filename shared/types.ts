@@ -213,6 +213,8 @@ export interface Settings {
   followup_days: number;
   /** Moteur de compilation LaTeX : GitHub Actions (défaut) ou service en ligne rapide. */
   latex_engine: 'github' | 'rapide';
+  /** Mise à jour du calendrier iCloud par GitHub Actions après les synchros. */
+  calendar_sync: boolean;
 }
 
 export interface DashboardData {

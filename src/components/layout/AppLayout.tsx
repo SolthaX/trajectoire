@@ -14,6 +14,7 @@ import {
   Moon,
   Search,
   Settings,
+  Share,
   Sun,
   Users,
   X,
@@ -23,10 +24,11 @@ import { NavLink, Outlet, useLocation } from 'react-router';
 import type { DashboardData } from '../../../shared/types';
 import { ContactSheet } from '../../features/contacts/ContactSheet';
 import { api } from '../../lib/api';
-import { useTheme } from '../../lib/hooks';
+import { useLocalState, useTheme } from '../../lib/hooks';
+import { isStandalone } from '../../lib/pwa';
 import { Kbd, Loading } from '../ui/misc';
 import { CommandPalette } from './CommandPalette';
-import { InstallButton, SyncIndicator } from './SyncIndicator';
+import { InstallButton, SyncDot, SyncIndicator, useAutoSync } from './SyncIndicator';
 
 interface NavItem {
   color?: string;
@@ -95,7 +97,9 @@ function Sidebar({ onSearch, onNavigate }: { onSearch: () => void; onNavigate?: 
       >
         <Search className="size-[15px]" />
         <span className="flex-1 text-left">Rechercher…</span>
-        <Kbd>Ctrl K</Kbd>
+        <span className="hidden lg:inline-flex">
+          <Kbd>Ctrl K</Kbd>
+        </span>
       </button>
 
       <nav className="flex-1 overflow-y-auto">
@@ -156,11 +160,64 @@ function Sidebar({ onSearch, onNavigate }: { onSearch: () => void; onNavigate?: 
   );
 }
 
+/** iPhone, dans Safari : rappelle comment installer l'app (pas d'invite d'installation sur iOS). */
+function IosInstallBanner() {
+  const [hidden, setHidden] = useLocalState('bandeau-ios-masque', false);
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  if (!ios || isStandalone() || hidden) return null;
+  return (
+    <div className="flex items-start gap-2 border-b border-line bg-saffron-soft px-4 py-2 text-[12.5px] text-ink-2 lg:hidden">
+      <Share className="mt-0.5 size-4 shrink-0 text-ink-3" />
+      <p className="flex-1">
+        Installez Trajectoire : bouton <strong>Partager</strong> puis <strong>Sur l'écran d'accueil</strong>. Ensuite, ouvrez-la depuis son icône et
+        connectez-la dans Paramètres.
+      </p>
+      <button onClick={() => setHidden(true)} className="rounded p-0.5 text-ink-3 hover:text-ink" aria-label="Masquer">
+        <X className="size-4" />
+      </button>
+    </div>
+  );
+}
+
+/** Barre d'onglets en bas de l'écran, sur téléphone. « Plus » ouvre le menu complet. */
+function TabBar({ onMore, moreOpen }: { onMore: () => void; moreOpen: boolean }) {
+  const { data } = useQuery({ queryKey: ['dashboard'], queryFn: () => api.get<DashboardData>('/dashboard') });
+  const due = data?.followups.filter((f) => f.overdue_days >= 0).length ?? 0;
+  const tabs = [
+    { to: '/', label: 'Accueil', icon: <LayoutDashboard />, end: true },
+    { to: '/contacts', label: 'Contacts', icon: <Users />, badge: due },
+    { to: '/networking', label: 'Networking', icon: <Handshake /> },
+    { to: '/a-envoyer', label: 'À envoyer', icon: <Send /> },
+  ];
+  const item = 'relative flex flex-1 flex-col items-center justify-center gap-0.5 pt-1.5 pb-1 text-[10.5px] font-medium [&_svg]:size-[21px]';
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-50 flex border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      aria-label="Navigation principale"
+    >
+      {tabs.map((t) => (
+        <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => clsx(item, isActive && !moreOpen ? 'text-maroon' : 'text-ink-3')}>
+          {t.icon}
+          {t.label}
+          {!!t.badge && (
+            <span className="tabular absolute top-0.5 left-1/2 ml-2 rounded-full bg-danger px-1 text-[10px] leading-4 font-semibold text-white">{t.badge}</span>
+          )}
+        </NavLink>
+      ))}
+      <button onClick={onMore} className={clsx(item, moreOpen ? 'text-maroon' : 'text-ink-3')} aria-expanded={moreOpen}>
+        <MenuIcon />
+        Plus
+      </button>
+    </nav>
+  );
+}
+
 export function AppLayout() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
   const location = useLocation();
   const fullBleed = location.pathname.startsWith('/documents');
+  useAutoSync();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -183,27 +240,31 @@ export function AppLayout() {
       {mobileNav && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={() => setMobileNav(false)} />
-          <aside className="anim-sheet absolute inset-y-0 left-0 w-[260px] side border-r border-line bg-bg text-ink shadow-lg">
+          <aside className="anim-sheet absolute inset-y-0 left-0 w-[260px] side border-r border-line bg-bg pt-[env(safe-area-inset-top)] pb-[calc(env(safe-area-inset-bottom)+56px)] text-ink shadow-lg">
             <Sidebar onSearch={() => setPaletteOpen(true)} onNavigate={() => setMobileNav(false)} />
           </aside>
         </div>
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex h-12 items-center gap-2 border-b border-line px-4 lg:hidden">
-          <button
-            onClick={() => setMobileNav((o) => !o)}
-            className="rounded-md p-1.5 text-ink-2 hover:bg-surface-2"
-            aria-label="Menu"
-          >
-            {mobileNav ? <X className="size-5" /> : <MenuIcon className="size-5" />}
-          </button>
-          <span className="text-[14px] font-semibold">Trajectoire</span>
-          <button onClick={() => setPaletteOpen(true)} className="ml-auto rounded-md p-1.5 text-ink-2 hover:bg-surface-2" aria-label="Rechercher">
-            <Search className="size-5" />
-          </button>
+        <div className="flex shrink-0 items-center gap-2 border-b border-line px-4 pt-[env(safe-area-inset-top)] lg:hidden">
+          <div className="flex h-12 w-full items-center gap-2">
+            <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-6 rounded-md ring-1 ring-line" />
+            <span className="text-[14px] font-semibold">Trajectoire</span>
+            <span className="ml-auto" />
+            <SyncDot />
+            <button onClick={() => setPaletteOpen(true)} className="rounded-md p-1.5 text-ink-2 hover:bg-surface-2" aria-label="Rechercher">
+              <Search className="size-5" />
+            </button>
+          </div>
         </div>
-        <main className={clsx('min-h-0 flex-1', fullBleed ? 'overflow-hidden' : 'overflow-y-auto')}>
+        <IosInstallBanner />
+        <main
+          className={clsx(
+            'min-h-0 flex-1 pb-[calc(env(safe-area-inset-bottom)+56px)] lg:pb-0',
+            fullBleed ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain',
+          )}
+        >
           <Suspense fallback={<Loading />}>
             {fullBleed ? (
               <Outlet />
@@ -216,6 +277,7 @@ export function AppLayout() {
         </main>
       </div>
 
+      <TabBar onMore={() => setMobileNav((o) => !o)} moreOpen={mobileNav} />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <ContactSheet />
     </div>

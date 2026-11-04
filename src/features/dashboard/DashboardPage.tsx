@@ -293,7 +293,7 @@ export function DashboardPage() {
       </div>
 
       <div className="mb-6 grid gap-5 lg:grid-cols-12">
-        <Card className="lg:col-span-7">
+        <Card className="min-w-0 lg:col-span-7">
           <CardHeader title="À faire" subtitle={totalTodos ? 'Messages et calls prévus, relances, entretiens, événements et échéances des 7 prochains jours.' : undefined} />
           {totalTodos === 0 ? (
             <div className="flex flex-col items-center py-8 text-center">
@@ -313,7 +313,7 @@ export function DashboardPage() {
           )}
         </Card>
 
-        <div className="lg:col-span-5">
+        <div className="min-w-0 lg:col-span-5">
           <CalendarCard />
         </div>
       </div>

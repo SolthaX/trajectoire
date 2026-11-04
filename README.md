@@ -33,6 +33,13 @@ Raccourcis : `Ctrl K` recherche et création rapide, `Ctrl S` enregistre dans le
 Firefox ne sait pas installer de web app : utilisez Chrome ou Edge pour la fenêtre, le reste de votre navigation ne change pas.
 Clic droit sur l'icône épinglée : raccourcis directs vers Pipeline, Contacts, Offres et Documents.
 
+### Sur l'iPhone
+
+Ouvrez l'adresse de l'app dans Safari → **Partager** → **Sur l'écran d'accueil**. L'app s'ouvre alors en plein écran,
+avec une barre d'onglets en bas, et fonctionne hors ligne. Pour la connecter sans retaper le jeton : sur l'ordinateur,
+**Paramètres → Sur votre iPhone → Afficher le code de connexion** ; sur l'iPhone, **Plus → Paramètres → Scanner le
+code**. L'app installée a ses propres données, séparées de Safari : connectez-la depuis son icône.
+
 ## Synchroniser avec GitHub (données + documents)
 
 Sans connexion, tout reste dans le navigateur de cet appareil. Pour sauvegarder, retrouver vos données sur un
@@ -60,7 +67,7 @@ affiche la progression puis l'aperçu, ou le journal d'erreurs. Votre CV ne quit
 ### Calendrier Apple (iCloud)
 
 Une minute après une synchro qui modifie un événement de networking, un entretien, une relance ou un message /
-call prévu, l'app lance le workflow `calendrier.yml` du dépôt privé. Il met à jour un calendrier iCloud
+call prévu, l'app lance le workflow `calendrier.yml` du dépôt privé (à activer dans **Paramètres → Calendrier Apple**, qui détaille la mise en place). Il met à jour un calendrier iCloud
 « Trajectoire » par CalDAV : création, modification et suppression, sans toucher aux autres événements. Il faut
 deux secrets dans le dépôt privé : `ICLOUD_USER` (Apple ID) et `ICLOUD_APP_PASSWORD` (mot de passe
 d'application). Le passage par GitHub est nécessaire : une page web ne peut pas appeler iCloud directement (CORS).
