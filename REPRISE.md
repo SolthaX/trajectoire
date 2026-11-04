@@ -1,16 +1,16 @@
 # Reprise — Trajectoire (dashboard de recherche d'emploi)
 
-> Dernière mise à jour : 2026-11-03 14:21 · branche `main` · commit `9bf519a` · en ligne : https://solthax.github.io/trajectoire/
+> Dernière mise à jour : 2026-11-04 15:34 · branche `main` · commit `a7e0620` · en ligne : https://solthax.github.io/trajectoire/
 > Fichier maintenu par `/end` (lu par `/start`). Aucune donnée sensible ici.
 
 ## Indicateurs
 
 | Indicateur | Valeur |
 |---|---|
-| Objectifs du jalon en cours | 7/8 (88 %) : reste le premier test réel avec le jeton · jalon « usage » : 9/10 |
-| Tests | Pas de suite dans le dépôt ; vérifications navigateur Playwright hors dépôt : 2026-11-03 networking 29/29 + export .ics 7/7 (relu par la bibliothèque `icalendar`) |
+| Objectifs du jalon en cours | 7/8 (88 %) : reste le premier test réel avec le jeton · jalon « usage » : 13/16 |
+| Tests | Pas de suite dans le dépôt ; vérifs hors dépôt 2026-11-04 : Playwright (calendrier, émulation iPhone 13, QR aller-retour) + synchro CalDAV contre Radicale local |
 | Lint / typecheck | `npm run typecheck` OK · `npm run build` OK |
-| Commits (total / depuis la dernière reprise) | 13 / 3 |
+| Commits (total / depuis la dernière reprise) | 18 / 4 (+1 887 / −63 lignes, 24 fichiers) |
 | Modifications non commitées | aucune |
 
 ## État actuel
@@ -23,25 +23,26 @@ LaTeX par GitHub Actions (Tectonic). Tout a été testé contre un faux GitHub e
 
 ## Fait lors de la dernière session
 
-- 2026-11-03, déployé (`140db78`, `9bf519a`) : la version en ligne contient bien les nouveautés.
-- Contacts multi-entreprises : `contacts.affiliations` (JSON `[{company_id, role}]`), en plus de l'entreprise
-  principale `company_id` / `role`. Filtre `?company_id=` et `contacts_count` incluent les secondaires
-  (`contactInCompany` dans `src/backend/routes/entities.ts`, via `json_each`). Le CRUD accepte désormais des
-  filtres en expression SQL avec `?` (`src/backend/crud.ts`).
-- Entreprises : `kind` (entreprise / reseau / ecole), `member` (j'en fais partie), `my_role` (ex. shifter).
-- Onglet **Networking** (`src/features/networking/`) : Mes réseaux, table `events` (organisateur, type, dates,
-  lieu, visio, page d'inscription, statut repéré / inscrit / participé / pas allé / annulé, préparation, bilan,
-  suites, `attendees` JSON `[{contact_id, note}]`). Contact créé sur place depuis l'événement, avec l'origine
-  « Rencontré à … ». « Rencontré à » sur la fiche contact, onglet Événements sur la page entreprise.
-  Les événements apparaissent dans l'À faire du tableau de bord et dans la recherche.
-- Export **.ics** (`src/lib/ics.ts`) : un bouton par événement, et un export groupé (sans les annulés ni les
-  « pas allé »). Repérés marqués « (repéré) », fin par défaut +2 h, UID stable.
-- Synchro : `SCHEMA_VERSION = 3` dans `trajectoire.json` ; une version plus ancienne de l'app refuse désormais
-  de pousser. Correctif : un dialogue ouvert depuis un autre ne valide plus le parent
-  (`stopPropagation` dans `src/components/ui/overlay.tsx`).
-- Fausse alerte « contacts disparus » : c'était un filtre mémorisé de la page Contacts.
+- 2026-11-04, tout poussé et déployé (`b7516b9`, `0092cad`, `9103e9c`, `a7e0620`).
+- **Liens dans Zen** (`src/lib/zen.ts`) : dans l'app installée, liens externes réécrits en `zen-open:<URL encodée>` ;
+  protocole Windows enregistré par `scripts/windows/installer-liens-zen.ps1` (lancé par l'utilisateur, OK).
+  Réglage par appareil : Paramètres → Liens externes (Chrome par défaut).
+- **Calendrier mensuel** sur le tableau de bord (`src/features/dashboard/CalendarCard.tsx`, route `/calendar`) :
+  networking (ciel), entretiens (prune), relances (corail), messages prévus (safran), échanges (sauge) ; légende
+  filtrable. Activité et Projets les mieux notés déplacés sous le calendrier.
+- **Synchro iCloud** : `repo-template/.github/calendrier/icloud.py` + `workflows/calendrier.yml` (CalDAV, calendrier
+  dédié « Trajectoire », UID `trajectoire-*`, empreinte par événement). Installé dans `trajectoire-donnees`
+  (`974d80a`, `8f368de`). L'app le déclenche (`src/backend/calendarSync.ts`) 1 min après une synchro qui change le
+  calendrier, si `settings.calendar_sync` est activé. Tuto + état du dernier passage dans Paramètres.
+- **Version iPhone** : barre d'onglets, zones sûres, méta Apple, pas de zoom sur les champs, bandeau d'installation
+  Safari, resynchro sur `visibilitychange` (`useAutoSync`), connexion par QR code (`src/lib/connexion.ts`,
+  `src/features/settings/PhoneCard.tsx`, dépendances `qrcode` + `jsqr`).
 
 ## En cours
+
+- Synchro iCloud jamais testée sur le vrai iCloud : il manque les secrets `ICLOUD_USER` / `ICLOUD_APP_PASSWORD`
+  dans `trajectoire-donnees`, puis Paramètres → Calendrier Apple → Activée → « Mettre à jour maintenant ».
+- Version iPhone non testée sur l'appareil (iPhone 15) : Dynamic Island, scan caméra, installation.
 
 - L'utilisateur a 4 contacts réels dans l'app : toute évolution doit préserver les données (instantané compatible).
 - Les versions de l'app antérieures à `140db78` n'ont pas le garde de schéma : si l'une d'elles reste ouverte
@@ -81,12 +82,18 @@ LaTeX par GitHub Actions (Tectonic). Tout a été testé contre un faux GitHub e
 - [x] Onglet Networking : événements (base, statut d'inscription, contacts rencontrés, préparation / bilan)
 - [x] Section « Mes réseaux » : mes appartenances et mon rôle (ex. shifter au Shift Project Paris)
 - [x] Export des événements vers le calendrier (.ics) pour l'iPhone
+- [x] Liens externes ouverts dans Zen depuis l'app installée
+- [x] Calendrier mensuel sur le tableau de bord
+- [x] Synchro automatique vers un calendrier iCloud (code + tuto)
+- [ ] Synchro iCloud vérifiée sur le vrai compte (secrets à ajouter)
+- [x] Version iPhone (installable, onglets, connexion par QR code)
+- [ ] Version iPhone vérifiée sur l'iPhone 15
 
 ## Prochaine étape proposée
 
-Saisir les vrais réseaux (Shift Project Paris, AX, l'X) et quelques événements, puis importer l'export .ics sur
-l'iPhone. Vérifier si un réimport met à jour ou duplique les événements. Ensuite, connecter GitHub
-(premier vrai test de synchro).
+Connecter GitHub dans l'app du PC (jeton fine-grained), puis installer l'app sur l'iPhone 15 et la connecter par
+QR code. Ensuite : mot de passe d'application Apple + secrets, activer la synchro iCloud, vérifier que le calendrier
+« Trajectoire » apparaît sur l'iPhone.
 
 ## Décisions prises
 
@@ -111,11 +118,21 @@ l'iPhone. Vérifier si un réimport met à jour ou duplique les événements. En
 - 2026-11-03 : calendrier abonné (webcal) écarté : l'utilisateur refuse de publier un .ics à une adresse
   publique (gist secret), donc l'export se fait uniquement par fichier .ics téléchargé. Synchro CalDAV iCloud
   impossible sans serveur (CORS).
+- 2026-11-04 : liens vers Zen par protocole Windows `zen-open:` (une page ne peut pas choisir le navigateur),
+  appliqué seulement dans l'app installée.
+- 2026-11-04 : synchro Apple Calendar par GitHub Actions → iCloud CalDAV (choix de l'utilisateur) ; revient sur
+  « CalDAV iCloud impossible » : impossible depuis la page, possible depuis le runner. Heures flottantes, comme l'export.
+- 2026-11-04 : le workflow calendrier n'est pas déclenché à chaque push mais par l'app (empreinte + délai 1 min),
+  pour ménager les 2 000 min/mois d'Actions du dépôt privé. Activation synchronisée (`settings.calendar_sync`).
+- 2026-11-04 : version iPhone = la même PWA installée depuis Safari (pas d'app native).
 - 2026-11-02 : chaque app de `solthax.github.io` a un id de manifeste absolu (`/trajectoire/`, `/JapaneseStudy/`),
   contrôlé au build pour Trajectoire. Sur l'origine partagée, chaque app ne touche qu'à ses propres caches et
   clés (`trajectoire-*` / `trajectoire:*`, `benkyo-*`).
 
 ## Points ouverts / questions
+
+- Dates limites de candidature : pas dans le calendrier (non demandé) ; à ajouter en bordeaux si souhaité.
+- Le code de connexion QR contient le jeton : affiché à la demande, masqué après 2 min.
 
 - Vérifier sur le vrai GitHub : `listRuns(sha)` pour un push fait depuis l'app (API Git Data), durée des
   compilations suivantes (cache Tectonic), affichage des PDF en URL blob dans Chrome.
